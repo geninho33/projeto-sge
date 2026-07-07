@@ -153,6 +153,66 @@ body {
 .app-header__user-info strong { display: block; font-size: 0.85rem; }
 .app-header__user-info small { color: var(--text-muted); font-size: 0.75rem; }
 
+.notif-bell { position: relative; }
+.notif-bell__btn {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+}
+.notif-bell__btn:hover { background: var(--primary-light); }
+.notif-bell__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.notif-bell__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, 90vw);
+  max-height: 400px;
+  overflow: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+.notif-bell__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.notif-bell__list { list-style: none; margin: 0; padding: 0; }
+.notif-bell__item {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.notif-bell__item--lida { opacity: 0.65; }
+.notif-bell__item p { margin: 0.25rem 0; font-size: 0.85rem; color: var(--text-muted); }
+.notif-bell__item small { color: var(--text-muted); font-size: 0.75rem; }
+.notif-bell__empty { padding: 1rem; text-align: center; color: var(--text-muted); }
+
 .app-content {
   flex: 1;
   padding: 1.5rem;
@@ -1583,3 +1643,22 @@ body {
   position: absolute; top: 1rem; right: 1.5rem; background: none; border: none;
   color: #fff; font-size: 2rem; cursor: pointer; line-height: 1;
 }
+
+/* Permissões — árvore de perfis */
+.perm-tree { display: flex; flex-direction: column; gap: 0.75rem; max-height: 55vh; overflow-y: auto; }
+.perm-tree__hint { font-size: 0.85rem; margin-bottom: 0.75rem; }
+.perm-tree__group { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.perm-tree__group-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.65rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+.perm-tree__toggle { background: none; border: none; font-weight: 600; cursor: pointer; text-align: left; flex: 1; }
+.perm-tree__group-select { max-width: 200px; font-size: 0.8rem; }
+.perm-tree__items { list-style: none; margin: 0; padding: 0; }
+.perm-tree__item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); }
+.perm-tree__item:last-child { border-bottom: none; }
+.perm-tree__item-label { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.perm-tree__item-icon { width: 28px; text-align: center; opacity: 0.85; }
+.perm-tree__item select { min-width: 180px; max-width: 220px; }
+
+/* Acesso negado */
+.page--centered { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
+.forbidden-card { max-width: 420px; text-align: center; padding: 2rem; }
+.forbidden-card__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }

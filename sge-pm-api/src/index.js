@@ -25,6 +25,7 @@ import comentariosRouter from "./routes/comentarios.js";
 import kanbanUsuarioRouter from "./routes/kanbanUsuario.js";
 import consultaTarefasRouter from "./routes/consultaTarefas.js";
 import consultaApontamentosRouter from "./routes/consultaApontamentos.js";
+import notificacoesRouter from "./routes/notificacoes.js";
 
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -71,6 +72,7 @@ api.use("/tramitacoes", tramitacoesRouter);
 api.use("/kanban-usuario", kanbanUsuarioRouter);
 api.use("/consulta/tarefas", consultaTarefasRouter);
 api.use("/consulta/apontamentos", consultaApontamentosRouter);
+api.use("/notificacoes", notificacoesRouter);
 api.use("/migracoes", migracoesRouter);
 
 app.use("/api", api);

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
 import { STATUS_PROJETO } from "../services/schemaV4.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -21,7 +23,7 @@ async function nextCodigo() {
   return `PRJ-${String((row?.m ?? 0) + 1).padStart(4, "0")}`;
 }
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("projetos", P.VIEW), async (req, res, next) => {
   try {
     const { q, status, ativo, page = 1, limit = 20, sort = "codigo", order = "asc" } = req.query;
     const lim = Math.min(100, Math.max(10, Number(limit) || 20));
@@ -56,7 +58,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireMenuPermission("projetos", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(`${SELECT} WHERE p.id = ? AND p.deleted_at IS NULL`, [req.params.id]);
     if (!row) return res.status(404).json({ error: { code: "NOT_FOUND" } });
@@ -66,7 +68,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.get("/:id/historico", async (req, res, next) => {
+router.get("/:id/historico", requireMenuPermission("projetos", P.VIEW), async (req, res, next) => {
   try {
     res.json({ data: await getHistorico("projeto", req.params.id) });
   } catch (err) {
@@ -74,7 +76,7 @@ router.get("/:id/historico", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("projetos", P.CREATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.nome?.trim()) return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Nome obrigatório" } });
@@ -99,7 +101,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireMenuPermission("projetos", P.UPDATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const fields = ["nome", "descricao", "cliente", "responsavel_id", "data_inicio", "data_fim_prevista", "status", "cor", "ativo"];
@@ -118,7 +120,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", requireMenuPermission("projetos", P.DELETE), async (req, res, next) => {
   try {
     await query(`UPDATE sge_pm_projeto SET deleted_at = datetime('now'), ativo = 0 WHERE id = ?`, [req.params.id]);
     await logHistorico("projeto", req.params.id, req.user.id, "exclusao_logica");

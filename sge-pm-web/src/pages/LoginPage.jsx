@@ -126,10 +126,6 @@ export default function LoginPage() {
               <Button type="submit" loading={loading} className="login-card__submit">
                 Entrar
               </Button>
-
-              <p className="login-card__hint">
-                Ambiente de desenvolvimento: <code>gestor@sge.local</code> / <code>Sge@2026</code>
-              </p>
             </>
           ) : (
             <>

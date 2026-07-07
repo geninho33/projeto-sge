@@ -110,14 +110,14 @@ async function syncProfilePermissions() {
     console.log(`  Permissões sincronizadas: ${codigo}`);
   }
 
-  const map = { gestor_proj: "gestor_proj", desenvolvedor: "desenvolvedor" };
+  const map = { admin: "admin", desenvolvedor: "desenvolvedor" };
   const insUP = s.prepare(`INSERT OR REPLACE INTO sge_pm_usuario_perfil (usuario_id, perfil_id) VALUES (?, ?)`);
   const users = s
     .prepare(`SELECT id, email, perfil FROM sge_pm_usuario WHERE deleted_at IS NULL AND ativo = 1`)
     .all();
 
   for (const u of users) {
-    const cod = map[u.perfil] || (u.email === "gestor@sge.local" ? "gestor_proj" : "desenvolvedor");
+    const cod = map[u.perfil] || (u.email === "gestor@sge.local" ? "admin" : "desenvolvedor");
     const pf = s.prepare(`SELECT id FROM sge_pm_perfil WHERE codigo = ?`).get(cod);
     if (pf) {
       s.prepare(`DELETE FROM sge_pm_usuario_perfil WHERE usuario_id = ?`).run(u.id);

@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { isAdminUser } from "../services/userRoles.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
+router.use(requireMenuPermission("consulta_tarefas", P.VIEW));
 
 const SORT_MAP = {
   titulo: "t.titulo",

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { ensureArray } from "../lib/ensureArray.js";
 import { isManagerUser } from "../services/profileService.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -24,7 +26,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.get("/:id/dashboard-gestor", async (req, res, next) => {
+router.get("/:id/dashboard-gestor", requireMenuPermission("dashboard", P.VIEW), async (req, res, next) => {
   try {
     if (!isManagerUser(req.user)) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Acesso restrito a gestores" } });
@@ -129,7 +131,7 @@ router.get("/:id/dashboard-gestor", async (req, res, next) => {
   }
 });
 
-router.get("/:id/dashboard", async (req, res, next) => {
+router.get("/:id/dashboard", requireMenuPermission("dashboard", P.VIEW), async (req, res, next) => {
   try {
     const id = req.params.id;
     const totais = await query(

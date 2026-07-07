@@ -38,10 +38,12 @@ const EXPORT_COLS = [
   { key: "tipo", label: "Tipo", format: (r) => TIPO_LABEL[r.tipo] || r.tipo },
 ];
 
+const EMPTY_META = { page: 1, limit: 20, total: 0, totalPages: 1, totais: {} };
+
 export default function ConsultaApontamentosPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
-  const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, totalPages: 1, totais: {} });
+  const [meta, setMeta] = useState(EMPTY_META);
   const [filtros, setFiltros] = useState({ projeto_id: "", executor_id: "", tipo: "", status: "", data_de: "", data_ate: "" });
   const [opcoes, setOpcoes] = useState({ projetos: [], executores: [] });
   const [q, setQ] = useState("");
@@ -70,9 +72,9 @@ export default function ConsultaApontamentosPage() {
     setLoading(true);
     try {
       const r = await apiJson(`/consulta/apontamentos?${buildParams()}`);
-      setRows(r.data);
-      setMeta(r.meta);
-    } catch (e) { setError(e.message); }
+      setRows(Array.isArray(r.data) ? r.data : []);
+      setMeta(r.meta ? { ...EMPTY_META, ...r.meta, totais: { ...EMPTY_META.totais, ...(r.meta.totais || {}) } } : EMPTY_META);
+    } catch (e) { setError(e.message); setMeta(EMPTY_META); }
     finally { setLoading(false); }
   }, [buildParams]);
 
@@ -133,10 +135,10 @@ export default function ConsultaApontamentosPage() {
         sort={sort}
         order={order}
         onSort={handleSort}
-        page={meta.page || page}
-        limit={meta.limit || limit}
-        total={meta.total || 0}
-        totalPages={meta.totalPages || 1}
+        page={meta?.page ?? page}
+        limit={meta?.limit ?? limit}
+        total={meta?.total ?? 0}
+        totalPages={meta?.totalPages ?? 1}
         onPageChange={setPage}
         onLimitChange={(n) => { setLimit(n); setPage(1); }}
         loading={loading}
@@ -183,17 +185,17 @@ export default function ConsultaApontamentosPage() {
       <div className="consulta-totals">
         <Card className="consulta-total-card">
           <span className="consulta-total-card__label">Registros</span>
-          <strong className="consulta-total-card__value">{meta.totais?.total_registros || meta.total || 0}</strong>
+          <strong className="consulta-total-card__value">{meta?.totais?.total_registros ?? meta?.total ?? 0}</strong>
         </Card>
         <Card className="consulta-total-card">
           <span className="consulta-total-card__label">Total de horas</span>
-          <strong className="consulta-total-card__value">{formatHoras(meta.totais?.total_horas)}</strong>
+          <strong className="consulta-total-card__value">{formatHoras(meta?.totais?.total_horas)}</strong>
         </Card>
       </div>
 
-      {(meta.totais?.por_usuario?.length > 0 || meta.totais?.por_projeto?.length > 0) && (
+      {(meta?.totais?.por_usuario?.length > 0 || meta?.totais?.por_projeto?.length > 0) && (
         <div className="consulta-breakdown">
-          {meta.totais.por_usuario?.length > 0 && (
+          {meta?.totais?.por_usuario?.length > 0 && (
             <Card>
               <h3 className="consulta-breakdown__title">Horas por usuário</h3>
               <div className="table-wrap">
@@ -208,7 +210,7 @@ export default function ConsultaApontamentosPage() {
               </div>
             </Card>
           )}
-          {meta.totais.por_projeto?.length > 0 && (
+          {meta?.totais?.por_projeto?.length > 0 && (
             <Card>
               <h3 className="consulta-breakdown__title">Horas por projeto</h3>
               <div className="table-wrap">

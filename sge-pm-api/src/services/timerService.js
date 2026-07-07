@@ -1,5 +1,6 @@
 import { query, queryOne } from "../db.js";
-import { createApontamento, notifyGestor } from "./apontamentoService.js";
+import { createApontamento } from "./apontamentoService.js";
+import { notifyGestor } from "./notificationService.js";
 import { nowTime, todayISO } from "./timeUtils.js";
 
 export async function getTimerAtivo(usuarioId) {

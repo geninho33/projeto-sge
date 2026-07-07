@@ -13,6 +13,8 @@ import { Avatar, AvatarGroup } from "../components/ui/Avatar";
 import { Alert } from "../components/ui/Alert";
 import { DemandaEditModal } from "../components/demanda/DemandaEditModal";
 import { DemandaDetailModal } from "../components/demanda/DemandaDetailModal";
+import { Can } from "../components/permission/Can";
+import { P } from "../hooks/usePermission";
 import { FASES_LABEL } from "../constants/cores";
 
 const FASES_INICIAIS = ["criacao", "analise", "desenvolvimento"];
@@ -119,7 +121,9 @@ export default function DemandasFlowPage() {
             <button type="button" className={`view-toggle__btn${viewMode === "lista" ? " active" : ""}`} onClick={() => setViewMode("lista")} title="Visualização em lista">☰</button>
             <button type="button" className={`view-toggle__btn${viewMode === "kanban" ? " active" : ""}`} onClick={() => setViewMode("kanban")} title="Visualização Kanban">▦</button>
           </div>
-          <Button onClick={openNew}>Nova Demanda</Button>
+          <Can menuKey="demandas" level={P.CREATE}>
+            <Button onClick={openNew}>Nova Demanda</Button>
+          </Can>
         </div>
       </div>
 
@@ -145,7 +149,9 @@ export default function DemandasFlowPage() {
           renderRow={(d) => (
             <tr key={d.id}>
               <td className="table-actions demanda-row__actions">
-                <Button size="sm" variant="ghost" onClick={() => setEditId(d.id)}>Editar</Button>
+                <Can menuKey="demandas" level={P.UPDATE}>
+                  <Button size="sm" variant="ghost" onClick={() => setEditId(d.id)}>Editar</Button>
+                </Can>
                 <Button size="sm" variant="ghost" onClick={() => setDetailId(d.id)}>Detalhes</Button>
               </td>
               <td><strong>{d.codigo}</strong></td>

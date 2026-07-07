@@ -2,6 +2,8 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
 import { getBacklogVisao } from "../services/backlogVisao.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -32,7 +34,7 @@ const BASE_SELECT = `
   LEFT JOIN sge_pm_usuario ub ON ub.id = m.id_user_back
 `;
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("backlog", P.VIEW), async (req, res, next) => {
   try {
     const {
       prioridade, status, sprint_id, q,
@@ -93,7 +95,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/kanban", async (_req, res, next) => {
+router.get("/kanban", requireMenuPermission("kanban", P.VIEW), async (_req, res, next) => {
   try {
     const rows = await query(
       `SELECT b.*, m.status_front, m.status_back, m.branch_front, m.branch_back
@@ -130,7 +132,7 @@ router.get("/:codigo/historico", async (req, res, next) => {
   }
 });
 
-router.put("/:codigo", async (req, res, next) => {
+router.put("/:codigo", requireMenuPermission("backlog", P.UPDATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const item = await queryOne(`SELECT id, sprint_id FROM sge_pm_backlog_item WHERE codigo = ?`, [req.params.codigo]);
@@ -172,7 +174,7 @@ router.get("/:codigo", async (req, res, next) => {
   }
 });
 
-router.patch("/:codigo/status", async (req, res, next) => {
+router.patch("/:codigo/status", requireMenuPermission("backlog", P.UPDATE), async (req, res, next) => {
   try {
     const { status_geral } = req.body;
     await query("UPDATE sge_pm_backlog_item SET status_geral = ? WHERE codigo = ?", [status_geral, req.params.codigo]);

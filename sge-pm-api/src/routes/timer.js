@@ -8,8 +8,10 @@ import {
   syncTimer,
 } from "../services/timerService.js";
 import { getTimerTarefa } from "../services/timerTarefaService.js";
+import { requireMenuPermissionByMethod } from "../middleware/auth.js";
 
 const router = Router();
+router.use(requireMenuPermissionByMethod("meu_kanban"));
 
 router.get("/tarefa/ativo", async (req, res, next) => {
   try {

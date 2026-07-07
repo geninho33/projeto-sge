@@ -63,20 +63,3 @@ export async function createApontamento(data, usuarioId, actorId) {
 
   return created;
 }
-
-export async function notifyGestor(demandaId, titulo, mensagem, referenciaTipo = "demanda") {
-  const gestores = await query(
-    `SELECT DISTINCT u.id
-     FROM sge_pm_usuario u
-     JOIN sge_pm_usuario_perfil up ON up.usuario_id = u.id
-     JOIN sge_pm_perfil p ON p.id = up.perfil_id
-     WHERE p.codigo IN ('gestor_proj', 'admin') AND u.ativo = 1 AND u.deleted_at IS NULL`
-  );
-  for (const g of gestores) {
-    await query(
-      `INSERT INTO sge_pm_notificacao (usuario_id, tipo, titulo, mensagem, referencia_tipo, referencia_id)
-       VALUES (?, 'atualizacao', ?, ?, ?, ?)`,
-      [g.id, titulo, mensagem, referenciaTipo, String(demandaId)]
-    );
-  }
-}

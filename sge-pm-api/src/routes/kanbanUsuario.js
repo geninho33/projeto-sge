@@ -2,8 +2,10 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { CORES_TIPO } from "../services/schemaV4.js";
 import { logHistorico } from "../services/historico.js";
+import { requireMenuPermissionByMethod } from "../middleware/auth.js";
 
 const router = Router();
+router.use(requireMenuPermissionByMethod("meu_kanban"));
 
 const MEU_KANBAN_FASES = ["desenvolvimento", "homologacao", "aprovacao", "cancelada"];
 

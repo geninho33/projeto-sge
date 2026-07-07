@@ -5,8 +5,9 @@ import multer from "multer";
 import { query, queryOne } from "../db.js";
 import { hashPassword } from "../services/authService.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
-import { requirePerfil } from "../middleware/auth.js";
+import { requireMenuPermission } from "../middleware/auth.js";
 import { syncUserProfiles, normalizeProfileCode } from "../services/profileService.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -32,7 +33,7 @@ function parseUser(row) {
   return row;
 }
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("admin_usuarios", P.VIEW), async (req, res, next) => {
   try {
     const { q, perfil, ativo, incluir_inativos } = req.query;
     const where = ["deleted_at IS NULL"];
@@ -64,7 +65,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireMenuPermission("admin_usuarios", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(
       `SELECT ${USER_FIELDS} FROM sge_pm_usuario WHERE id = ? AND deleted_at IS NULL`,
@@ -78,7 +79,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.get("/:id/historico", async (req, res, next) => {
+router.get("/:id/historico", requireMenuPermission("admin_usuarios", P.VIEW), async (req, res, next) => {
   try {
     const rows = await getHistorico("usuario", req.params.id);
     res.json({ data: rows });
@@ -87,7 +88,7 @@ router.get("/:id/historico", async (req, res, next) => {
   }
 });
 
-router.post("/", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.post("/", requireMenuPermission("admin_usuarios", P.CREATE), async (req, res, next) => {
   try {
     const { nome, email, senha, cargo, perfil, perfis } = req.body || {};
     if (!nome?.trim() || !email?.trim()) {
@@ -117,7 +118,7 @@ router.post("/", requirePerfil("gestor_proj", "admin"), async (req, res, next) =
   }
 });
 
-router.put("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.put("/:id", requireMenuPermission("admin_usuarios", P.UPDATE), async (req, res, next) => {
   try {
     const { nome, email, cargo, perfil, perfis, senha, ativo } = req.body || {};
     const existing = await queryOne(`SELECT * FROM sge_pm_usuario WHERE id = ? AND deleted_at IS NULL`, [req.params.id]);
@@ -172,7 +173,7 @@ router.post("/:id/avatar", upload.single("avatar"), async (req, res, next) => {
   }
 });
 
-router.patch("/:id/ativar", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.patch("/:id/ativar", requireMenuPermission("admin_usuarios", P.UPDATE), async (req, res, next) => {
   try {
     const { ativo } = req.body;
     await query(`UPDATE sge_pm_usuario SET ativo = ? WHERE id = ? AND deleted_at IS NULL`, [ativo ? 1 : 0, req.params.id]);
@@ -183,7 +184,7 @@ router.patch("/:id/ativar", requirePerfil("gestor_proj", "admin"), async (req, r
   }
 });
 
-router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.delete("/:id", requireMenuPermission("admin_usuarios", P.DELETE), async (req, res, next) => {
   try {
     await query(`UPDATE sge_pm_usuario SET deleted_at = datetime('now'), ativo = 0 WHERE id = ?`, [req.params.id]);
     await logHistorico("usuario", req.params.id, req.user.id, "exclusao_logica");

@@ -9,6 +9,8 @@ import { EditModalFooter } from "../components/ui/EditModalFooter";
 import { StatusBadge } from "../components/ui/Badge";
 import { Alert } from "../components/ui/Alert";
 import { STATUS_PROJETO } from "../constants/cores";
+import { Can } from "../components/permission/Can";
+import { P } from "../hooks/usePermission";
 
 const CORES = ["#1E6FD9", "#059669", "#DC2626", "#D97706", "#7C3AED", "#00D2FF", "#64748B"];
 
@@ -94,10 +96,18 @@ export default function ProjetosPage() {
         onPageChange={setPage}
         onLimitChange={(n) => { setLimit(n); setPage(1); }}
         loading={loading}
-        actions={<Button onClick={() => setEdit({ nome: "", status: "planejamento", cor: "#1E6FD9", ativo: 1 })}>Novo Projeto</Button>}
+        actions={(
+          <Can menuKey="projetos" level={P.CREATE}>
+            <Button onClick={() => setEdit({ nome: "", status: "planejamento", cor: "#1E6FD9", ativo: 1 })}>Novo Projeto</Button>
+          </Can>
+        )}
         renderRow={(p) => (
           <tr key={p.id}>
-            <td className="table-actions"><Button size="sm" variant="ghost" onClick={() => setEdit({ ...p })}>Editar</Button></td>
+            <td className="table-actions">
+              <Can menuKey="projetos" level={P.UPDATE}>
+                <Button size="sm" variant="ghost" onClick={() => setEdit({ ...p })}>Editar</Button>
+              </Can>
+            </td>
             <td><span className="proj-dot" style={{ background: p.cor }} /> <strong>{p.codigo}</strong></td>
             <td>{p.nome}</td>
             <td>{p.cliente || "—"}</td>

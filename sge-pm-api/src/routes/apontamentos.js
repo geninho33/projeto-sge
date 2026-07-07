@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { createApontamento, validateNoOverlap } from "../services/apontamentoService.js";
-import { notifyGestor } from "../services/apontamentoService.js";
+import { notifyGestor } from "../services/notificationService.js";
 import { calcDurationMinutes } from "../services/timeUtils.js";
-import { requirePerfil } from "../middleware/auth.js";
+import { requireMenuPermission } from "../middleware/auth.js";
 import { isManagerUser } from "../services/profileService.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("consulta_apontamentos", P.VIEW), async (req, res, next) => {
   try {
     const { demanda_id, usuario_id, data_inicio, data_fim } = req.query;
     const where = ["1=1"];
@@ -38,7 +39,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("consulta_apontamentos", P.CREATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const usuarioId = b.usuario_id ?? req.user.id;
@@ -67,7 +68,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireMenuPermission("consulta_apontamentos", P.UPDATE), async (req, res, next) => {
   try {
     const existing = await queryOne(`SELECT * FROM sge_pm_apontamento WHERE id = ?`, [req.params.id]);
     if (!existing) return res.status(404).json({ error: { code: "NOT_FOUND" } });
@@ -101,7 +102,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.delete("/:id", requireMenuPermission("consulta_apontamentos", P.DELETE), async (req, res, next) => {
   try {
     await query(`DELETE FROM sge_pm_apontamento WHERE id = ?`, [req.params.id]);
     res.json({ data: { ok: true } });

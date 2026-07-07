@@ -2,6 +2,8 @@ import { Router } from "express";
 import { query, queryOne, useSqlite } from "../db.js";
 import { branchSlug } from "../services/skillResolver.js";
 import { logHistorico } from "../services/historico.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -26,7 +28,7 @@ const BASE_FROM = `
   LEFT JOIN sge_pm_projeto p ON p.id = COALESCE(b.projeto_id, 1)
 `;
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("admin_mapeamento", P.VIEW), async (req, res, next) => {
   try {
     const { q, page = 1, limit = 20, sort = "codigo", order = "asc" } = req.query;
     const lim = Math.min(100, Math.max(10, Number(limit) || 20));
@@ -73,7 +75,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:codigo", async (req, res, next) => {
+router.get("/:codigo", requireMenuPermission("admin_mapeamento", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(
       `SELECT m.*, b.codigo, b.titulo, b.descricao, b.score, b.prioridade, b.tags, p.nome AS projeto_nome
@@ -87,7 +89,7 @@ router.get("/:codigo", async (req, res, next) => {
   }
 });
 
-router.patch("/:codigo", async (req, res, next) => {
+router.patch("/:codigo", requireMenuPermission("admin_mapeamento", P.UPDATE), async (req, res, next) => {
   try {
     const codigo = req.params.codigo;
     const item = await queryOne("SELECT id, titulo FROM sge_pm_backlog_item WHERE codigo = ?", [codigo]);

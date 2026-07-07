@@ -2,14 +2,16 @@ import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico } from "../services/historico.js";
 import { CORES_TIPO } from "../services/schemaV4.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
-router.get("/cores", (_req, res) => {
+router.get("/cores", requireMenuPermission("admin_tipos", P.VIEW), (_req, res) => {
   res.json({ data: CORES_TIPO });
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("admin_tipos", P.VIEW), async (req, res, next) => {
   try {
     const { q, ativo } = req.query;
     const where = ["1=1"];
@@ -27,7 +29,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("admin_tipos", P.CREATE), async (req, res, next) => {
   try {
     const { codigo, nome, descricao, cor = "azul", icone, ativo = 1 } = req.body || {};
     if (!codigo?.trim() || !nome?.trim()) {
@@ -45,7 +47,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireMenuPermission("admin_tipos", P.UPDATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const fields = ["nome", "descricao", "cor", "icone", "ativo"];

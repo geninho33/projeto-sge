@@ -30,10 +30,12 @@ const EXPORT_COLS = [
   { key: "horas_apontadas", label: "Horas", format: (r) => formatHoras(r.horas_apontadas) },
 ];
 
+const EMPTY_META = { page: 1, limit: 20, total: 0, totalPages: 1, totais: {} };
+
 export default function ConsultaTarefasPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
-  const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, totalPages: 1, totais: {} });
+  const [meta, setMeta] = useState(EMPTY_META);
   const [filtros, setFiltros] = useState({ projeto_id: "", demanda_id: "", atividade_id: "", executor_id: "", status: "", backlog_id: "", data_inicio_de: "", data_inicio_ate: "" });
   const [opcoes, setOpcoes] = useState({ projetos: [], executores: [], backlogs: [] });
   const [q, setQ] = useState("");
@@ -62,9 +64,9 @@ export default function ConsultaTarefasPage() {
     setLoading(true);
     try {
       const r = await apiJson(`/consulta/tarefas?${buildParams()}`);
-      setRows(r.data);
-      setMeta(r.meta);
-    } catch (e) { setError(e.message); }
+      setRows(Array.isArray(r.data) ? r.data : []);
+      setMeta(r.meta ? { ...EMPTY_META, ...r.meta, totais: { ...EMPTY_META.totais, ...(r.meta.totais || {}) } } : EMPTY_META);
+    } catch (e) { setError(e.message); setMeta(EMPTY_META); }
     finally { setLoading(false); }
   }, [buildParams]);
 
@@ -129,10 +131,10 @@ export default function ConsultaTarefasPage() {
         sort={sort}
         order={order}
         onSort={handleSort}
-        page={meta.page || page}
-        limit={meta.limit || limit}
-        total={meta.total || 0}
-        totalPages={meta.totalPages || 1}
+        page={meta?.page ?? page}
+        limit={meta?.limit ?? limit}
+        total={meta?.total ?? 0}
+        totalPages={meta?.totalPages ?? 1}
         onPageChange={setPage}
         onLimitChange={(n) => { setLimit(n); setPage(1); }}
         loading={loading}

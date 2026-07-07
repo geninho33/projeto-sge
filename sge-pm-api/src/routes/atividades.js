@@ -4,6 +4,7 @@ import { logHistorico } from "../services/historico.js";
 import { validateFase } from "../services/demandaFlow.js";
 import { getTarefas, recalcAtividadeStatus } from "../services/atividadeStatus.js";
 import { isManagerUser } from "../services/profileService.js";
+import { requireMenuPermissionByMethod } from "../middleware/auth.js";
 import {
   getTarefaEnriched,
   tryConcluirTarefa,
@@ -37,6 +38,7 @@ function deny(res, result) {
 }
 
 const router = Router();
+router.use(requireMenuPermissionByMethod("meu_kanban"));
 
 const SELECT = `
   SELECT a.*, t.nome AS tipo_nome, t.cor AS tipo_cor, t.icone AS tipo_icone,

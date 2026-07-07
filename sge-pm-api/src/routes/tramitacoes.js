@@ -3,8 +3,11 @@ import { query, queryOne } from "../db.js";
 import { logHistorico } from "../services/historico.js";
 import { canAdvancePhase, nextPhase, enrichDemanda, validateFase } from "../services/demandaFlow.js";
 import { FASES_DEMANDA } from "../services/schemaV4.js";
+import { requireMenuPermission, requireMenuPermissionByMethod } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
+router.use(requireMenuPermissionByMethod("demandas", { POST: P.APPROVE, PATCH: P.APPROVE }));
 
 router.get("/:demandaId", async (req, res, next) => {
   try {

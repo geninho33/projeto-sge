@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
-import { notifyGestor } from "../services/apontamentoService.js";
+import { notifyGestor } from "../services/notificationService.js";
 import { SITUACOES_TRABALHO } from "../services/schemaV3.js";
-import { requirePerfil } from "../middleware/auth.js";
+import { requireMenuPermission } from "../middleware/auth.js";
 import { isManagerUser } from "../services/profileService.js";
+import { P } from "../services/menuPermissions.js";
 import { enrichDemanda, validateFase } from "../services/demandaFlow.js";
 
 const router = Router();
@@ -35,7 +36,7 @@ async function nextCodigo() {
   return `DEM-${String((row?.m ?? 0) + 1).padStart(4, "0")}`;
 }
 
-router.get("/minhas", async (req, res, next) => {
+router.get("/minhas", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const rows = await query(
       `${SELECT} WHERE d.responsavel_id = ? ORDER BY
@@ -54,7 +55,7 @@ router.get("/minhas", async (req, res, next) => {
   }
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const { q, sprint_id, responsavel_id, situacao, situacao_trabalho } = req.query;
     const where = ["1=1"];
@@ -115,7 +116,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id/historico", async (req, res, next) => {
+router.get("/:id/historico", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const rows = await getHistorico("demanda", req.params.id);
     res.json({ data: rows });
@@ -124,7 +125,7 @@ router.get("/:id/historico", async (req, res, next) => {
   }
 });
 
-router.get("/:id/apontamentos", async (req, res, next) => {
+router.get("/:id/apontamentos", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const rows = await query(
       `SELECT a.*, u.nome AS usuario_nome FROM sge_pm_apontamento a
@@ -138,7 +139,7 @@ router.get("/:id/apontamentos", async (req, res, next) => {
   }
 });
 
-router.get("/:id/completo", async (req, res, next) => {
+router.get("/:id/completo", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(`${SELECT} WHERE d.id = ?`, [req.params.id]);
     if (!row) return res.status(404).json({ error: { code: "NOT_FOUND" } });
@@ -148,7 +149,7 @@ router.get("/:id/completo", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(`${SELECT} WHERE d.id = ?`, [req.params.id]);
     if (!row) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Demanda não encontrada" } });
@@ -158,7 +159,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.patch("/:id/andamento", async (req, res, next) => {
+router.patch("/:id/andamento", requireMenuPermission("demandas", P.UPDATE), async (req, res, next) => {
   try {
     const demanda = await queryOne(`SELECT * FROM sge_pm_demanda WHERE id = ?`, [req.params.id]);
     if (!demanda) return res.status(404).json({ error: { code: "NOT_FOUND" } });
@@ -203,7 +204,7 @@ router.patch("/:id/andamento", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("demandas", P.CREATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.titulo?.trim()) {
@@ -255,7 +256,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.post("/legado", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.post("/legado", requireMenuPermission("demandas_legado", P.CREATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.titulo?.trim()) {
@@ -287,7 +288,7 @@ router.post("/legado", requirePerfil("gestor_proj", "admin"), async (req, res, n
   }
 });
 
-router.patch("/:id/flow", async (req, res, next) => {
+router.patch("/:id/flow", requireMenuPermission("demandas", P.APPROVE), async (req, res, next) => {
   try {
     const demanda = await queryOne(`SELECT * FROM sge_pm_demanda WHERE id = ?`, [req.params.id]);
     if (!demanda) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Demanda não encontrada" } });
@@ -338,7 +339,7 @@ router.patch("/:id/flow", async (req, res, next) => {
   }
 });
 
-router.put("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.put("/:id", requireMenuPermission("demandas", P.UPDATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const fields = [
@@ -365,7 +366,7 @@ router.put("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next)
   }
 });
 
-router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
+router.delete("/:id", requireMenuPermission("demandas", P.DELETE), async (req, res, next) => {
   try {
     await query(`DELETE FROM sge_pm_demanda WHERE id = ?`, [req.params.id]);
     await logHistorico("demanda", req.params.id, req.user.id, "excluida");

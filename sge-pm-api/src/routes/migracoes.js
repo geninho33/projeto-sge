@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { P } from "../services/menuPermissions.js";
 
 const router = Router();
 
@@ -12,7 +14,7 @@ const SELECT = `
   LEFT JOIN sge_pm_projeto p ON p.id = m.projeto_id
 `;
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("admin_migracoes", P.VIEW), async (req, res, next) => {
   try {
     const { status, sprint_id } = req.query;
     const where = ["1=1"];
@@ -33,7 +35,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireMenuPermission("admin_migracoes", P.VIEW), async (req, res, next) => {
   try {
     const row = await queryOne(`${SELECT} WHERE m.id = ?`, [req.params.id]);
     if (!row) return res.status(404).json({ error: { code: "NOT_FOUND" } });
@@ -56,7 +58,7 @@ router.get("/:id/historico", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("admin_migracoes", P.CREATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     await query(
@@ -83,7 +85,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireMenuPermission("admin_migracoes", P.UPDATE), async (req, res, next) => {
   try {
     const b = req.body || {};
     const fields = ["projeto_id", "sprint_id", "branch_nome", "desenvolvedor_id", "funcionalidades", "correcoes", "scripts_db", "alteracoes_config", "observacoes", "status_implantacao"];

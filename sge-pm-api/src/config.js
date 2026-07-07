@@ -6,6 +6,8 @@ export const config = {
   sqlitePath: process.env.SQLITE_PATH || "data/sge_pm.sqlite",
   jwtSecret: process.env.JWT_SECRET || "sge-pm-dev-secret-change-in-production",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
+  /** URL opcional (Discord, Slack, Teams etc.) para alertar atualizações de demandas/apontamentos */
+  notifyWebhookUrl: process.env.NOTIFY_WEBHOOK_URL || "",
   mysql: {
     host: process.env.MYSQL_HOST || "127.0.0.1",
     port: Number(process.env.MYSQL_PORT) || 3307,

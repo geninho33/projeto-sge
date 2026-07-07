@@ -1,15 +1,16 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { logHistorico } from "../services/historico.js";
-import { MENU_STRUCTURE, NIVEL_PERMISSAO } from "../services/menuPermissions.js";
+import { requireMenuPermission } from "../middleware/auth.js";
+import { MENU_STRUCTURE, getMenuPayload, P, flattenMenuKeys } from "../services/menuPermissions.js";
 
 const router = Router();
 
 router.get("/menus", (_req, res) => {
-  res.json({ data: { structure: MENU_STRUCTURE, niveis: NIVEL_PERMISSAO } });
+  res.json({ data: getMenuPayload() });
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", requireMenuPermission("admin_perfis", P.VIEW), async (req, res, next) => {
   try {
     const { q, ativo } = req.query;
     const where = ["1=1"];
@@ -27,12 +28,14 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireMenuPermission("admin_perfis", P.VIEW), async (req, res, next) => {
   try {
+    if (req.params.id === "menus") return next();
     const perfil = await queryOne(`SELECT * FROM sge_pm_perfil WHERE id = ?`, [req.params.id]);
     if (!perfil) return res.status(404).json({ error: { code: "NOT_FOUND" } });
     const permissoes = await query(`SELECT menu_key, nivel FROM sge_pm_perfil_permissao WHERE perfil_id = ?`, [req.params.id]);
     const map = {};
+    for (const key of flattenMenuKeys()) map[key] = 0;
     for (const p of permissoes) map[p.menu_key] = p.nivel;
     perfil.permissoes = map;
     res.json({ data: perfil });
@@ -41,7 +44,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireMenuPermission("admin_perfis", P.CREATE), async (req, res, next) => {
   try {
     const { codigo, nome, descricao, ativo = 1, permissoes = {} } = req.body || {};
     if (!codigo?.trim() || !nome?.trim()) {
@@ -51,9 +54,9 @@ router.post("/", async (req, res, next) => {
       codigo.trim().toLowerCase(), nome.trim(), descricao ?? null, ativo ? 1 : 0,
     ]);
     const created = await queryOne(`SELECT * FROM sge_pm_perfil WHERE codigo = ?`, [codigo.trim().toLowerCase()]);
-    for (const [menu_key, nivel] of Object.entries(permissoes)) {
+    for (const key of flattenMenuKeys()) {
       await query(`INSERT INTO sge_pm_perfil_permissao (perfil_id, menu_key, nivel) VALUES (?, ?, ?)`, [
-        created.id, menu_key, Number(nivel) || 0,
+        created.id, key, Number(permissoes[key]) || 0,
       ]);
     }
     await logHistorico("perfil", created.id, req.user.id, "criado", req.body);
@@ -63,7 +66,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireMenuPermission("admin_perfis", P.UPDATE), async (req, res, next) => {
   try {
     const { nome, descricao, ativo, permissoes } = req.body || {};
     const sets = ["updated_at = datetime('now')"];
@@ -76,9 +79,9 @@ router.put("/:id", async (req, res, next) => {
 
     if (permissoes) {
       await query(`DELETE FROM sge_pm_perfil_permissao WHERE perfil_id = ?`, [req.params.id]);
-      for (const [menu_key, nivel] of Object.entries(permissoes)) {
+      for (const key of flattenMenuKeys()) {
         await query(`INSERT INTO sge_pm_perfil_permissao (perfil_id, menu_key, nivel) VALUES (?, ?, ?)`, [
-          req.params.id, menu_key, Number(nivel) || 0,
+          req.params.id, key, Number(permissoes[key]) || 0,
         ]);
       }
     }
@@ -90,7 +93,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/:id/aplicar-grupo", async (req, res, next) => {
+router.post("/:id/aplicar-grupo", requireMenuPermission("admin_perfis", P.UPDATE), async (req, res, next) => {
   try {
     const { grupo, nivel } = req.body || {};
     const grupoData = MENU_STRUCTURE.find((g) => g.grupo === grupo);

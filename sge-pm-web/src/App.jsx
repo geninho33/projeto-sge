@@ -1,8 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import { hasPermission } from "./utils/permissions";
+import { getEffectivePermissions, hasPermission, P } from "./utils/permissions";
 import AppShell from "./components/layout/AppShell";
 import LoginPage from "./pages/LoginPage";
+import ForbiddenPage from "./pages/ForbiddenPage";
 import DashboardPage from "./pages/DashboardPage";
 import MinhasDemandasPage from "./pages/MinhasDemandasPage";
 import BacklogKanban from "./pages/BacklogKanban";
@@ -31,11 +32,11 @@ function PrivateRoute({ children }) {
   return children;
 }
 
-function PermissionRoute({ menuKey, minLevel = 1, children }) {
+function PermissionRoute({ menuKey, minLevel = P.VIEW, children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
-  if (!hasPermission(user?.permissoes, menuKey, minLevel)) {
-    return <Navigate to="/" replace />;
+  if (!hasPermission(getEffectivePermissions(user), menuKey, minLevel)) {
+    return <ForbiddenPage menuKey={menuKey} />;
   }
   return children;
 }
@@ -44,15 +45,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route
-        element={
-          <PrivateRoute>
-            <AppShell />
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="minhas-demandas" element={<MinhasDemandasPage />} />
+      <Route element={<PrivateRoute><AppShell /></PrivateRoute>}>
+        <Route index element={<PermissionRoute menuKey="dashboard"><DashboardPage /></PermissionRoute>} />
+        <Route path="minhas-demandas" element={<PermissionRoute menuKey="demandas"><MinhasDemandasPage /></PermissionRoute>} />
         <Route path="meu-kanban" element={<PermissionRoute menuKey="meu_kanban"><MeuKanbanPage /></PermissionRoute>} />
         <Route path="projetos" element={<PermissionRoute menuKey="projetos"><ProjetosPage /></PermissionRoute>} />
         <Route path="demandas-flow" element={<PermissionRoute menuKey="demandas"><DemandasFlowPage /></PermissionRoute>} />
@@ -61,17 +56,15 @@ export default function App() {
         <Route path="demandas-flow/:id" element={<PermissionRoute menuKey="demandas"><DemandaDetailPage /></PermissionRoute>} />
         <Route path="kanban" element={<PermissionRoute menuKey="kanban"><BacklogKanban /></PermissionRoute>} />
         <Route path="backlog" element={<PermissionRoute menuKey="backlog"><BacklogList /></PermissionRoute>} />
-        <Route path="sprints" element={<SprintsPage />} />
-        <Route path="sprint-board" element={<SprintBoard />} />
+        <Route path="sprints" element={<PermissionRoute menuKey="backlog"><SprintsPage /></PermissionRoute>} />
+        <Route path="sprint-board" element={<PermissionRoute menuKey="backlog"><SprintBoard /></PermissionRoute>} />
         <Route path="demandas" element={<PermissionRoute menuKey="demandas_legado"><DemandasPage /></PermissionRoute>} />
-
         <Route path="admin/perfis" element={<PermissionRoute menuKey="admin_perfis"><PerfisPage /></PermissionRoute>} />
         <Route path="admin/tipos-atividade" element={<PermissionRoute menuKey="admin_tipos"><TiposAtividadePage /></PermissionRoute>} />
         <Route path="admin/migracoes" element={<PermissionRoute menuKey="admin_migracoes"><MigracoesPage /></PermissionRoute>} />
         <Route path="admin/mapeamento" element={<PermissionRoute menuKey="admin_mapeamento"><MapeamentoPage /></PermissionRoute>} />
         <Route path="admin/skills" element={<PermissionRoute menuKey="skills"><SkillsPage /></PermissionRoute>} />
         <Route path="admin/usuarios" element={<PermissionRoute menuKey="admin_usuarios"><UsuariosPerfisPage /></PermissionRoute>} />
-
         <Route path="migracoes" element={<Navigate to="/admin/migracoes" replace />} />
         <Route path="mapeamento" element={<Navigate to="/admin/mapeamento" replace />} />
         <Route path="skills" element={<Navigate to="/admin/skills" replace />} />

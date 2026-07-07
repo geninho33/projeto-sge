@@ -1,5 +1,5 @@
 import { query } from "../db.js";
-import { hasPermission } from "./menuPermissions.js";
+import { DEFAULT_PROFILE_PERMISSIONS, hasPermission, P } from "./menuPermissions.js";
 
 const LEGACY_PROFILE_MAP = {
   gestor: "gestor_proj",
@@ -74,12 +74,25 @@ export async function syncUserProfiles(userId, profileCodes) {
   }
 }
 
+function parsePerfisField(perfis, perfil) {
+  if (Array.isArray(perfis)) return perfis;
+  if (typeof perfis === "string" && perfis.trim()) {
+    try {
+      const parsed = JSON.parse(perfis);
+      return Array.isArray(parsed) ? parsed : [perfil].filter(Boolean);
+    } catch {
+      return [perfil].filter(Boolean);
+    }
+  }
+  return perfil ? [perfil] : [];
+}
+
 export async function enrichUser(user) {
   if (!user) return user;
 
   let perfisArr = await getUserProfileCodes(user.id);
   if (!perfisArr.length) {
-    const legacy = user.perfis ? JSON.parse(user.perfis) : user.perfil ? [user.perfil] : [];
+    const legacy = parsePerfisField(user.perfis, user.perfil);
     perfisArr = [...new Set(legacy.map(normalizeProfileCode).filter(Boolean))];
     if (perfisArr.length) await syncUserProfiles(user.id, perfisArr);
   }
@@ -96,13 +109,36 @@ export async function enrichUser(user) {
   return user;
 }
 
+export function getProfileCodesFromUser(user) {
+  if (user?.perfisArr?.length) {
+    return [...new Set(user.perfisArr.map(normalizeProfileCode).filter(Boolean))];
+  }
+  return [...new Set(parsePerfisField(user?.perfis, user?.perfil).map(normalizeProfileCode).filter(Boolean))];
+}
+
+export function getEffectivePermissions(user) {
+  const fromDb = user?.permissoes;
+  if (fromDb && Object.keys(fromDb).length > 0) return fromDb;
+
+  const merged = {};
+  for (const code of getProfileCodesFromUser(user)) {
+    const defaults = DEFAULT_PROFILE_PERMISSIONS[code];
+    if (!defaults) continue;
+    for (const [key, nivel] of Object.entries(defaults)) {
+      merged[key] = Math.max(merged[key] ?? 0, nivel);
+    }
+  }
+  return merged;
+}
+
 export function hasMenuPermission(user, menuKey, minLevel = 1) {
-  return hasPermission(user?.permissoes, menuKey, minLevel);
+  return hasPermission(getEffectivePermissions(user), menuKey, minLevel);
 }
 
 export function isManagerUser(user) {
-  if (hasMenuPermission(user, "admin_usuarios", 1)) return true;
-  if (hasMenuPermission(user, "projetos", 3)) return true;
-  const perfis = user?.perfisArr || [];
-  return perfis.some((p) => ["gestor_proj", "admin"].includes(p));
+  const perfis = getProfileCodesFromUser(user);
+  if (perfis.some((p) => ["gestor_proj", "admin"].includes(p))) return true;
+  return hasMenuPermission(user, "admin_usuarios", P.VIEW)
+    || hasMenuPermission(user, "admin_perfis", P.VIEW)
+    || hasMenuPermission(user, "projetos", P.UPDATE);
 }

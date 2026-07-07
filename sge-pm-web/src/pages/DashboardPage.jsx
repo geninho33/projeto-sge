@@ -26,11 +26,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isGestor) return;
+    setLoading(true);
     apiJson("/projeto/1/dashboard-gestor")
       .then((r) => setGestor(r.data))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [isGestor]);
+  }, [isGestor, user?.perfil, user?.perfisArr]);
 
   if (!isGestor) return <Dashboard />;
 
