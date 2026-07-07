@@ -1,0 +1,30 @@
+# API 16Flow — produção
+FROM node:20-alpine
+
+RUN apk add --no-cache python3 make g++ wget
+
+WORKDIR /repo
+
+COPY package.json package-lock.json ./
+COPY sge-pm-api/package.json ./sge-pm-api/
+
+RUN npm ci --workspace=sge-pm-api --omit=dev
+
+COPY sge-pm-api/ ./sge-pm-api/
+COPY crawl/ ./crawl/
+
+WORKDIR /repo/sge-pm-api
+
+RUN mkdir -p data public/avatars
+
+ENV NODE_ENV=production \
+    PORT=3010 \
+    DB_DRIVER=sqlite \
+    SQLITE_PATH=/repo/sge-pm-api/data/sge_pm.sqlite
+
+EXPOSE 3010
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:3010/health || exit 1
+
+CMD ["node", "src/index.js"]

@@ -1,0 +1,21 @@
+# Contexto de build Docker (deploy)
+**/node_modules
+**/dist
+**/.vite
+**/.cache
+**/.env
+**/.env.*
+!**/.env.example
+.git
+docs/
+genexus/
+sge-bff/
+sge-web/
+packages/
+deploy/dist/
+deploy/backups/
+crawl/screenshots/
+**/*.log
+**/__tests__
+**/*.test.js
+**/*.spec.js

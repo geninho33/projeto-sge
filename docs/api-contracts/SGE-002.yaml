@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: SGE-002 — Estudantes da Matrícula
+  version: 0.1.0-spike
+  description: Spike Sprint 3 — hSelAlunoMatricula.aspx | Score 456
+paths:
+  /api/v1/matriculas/alunos:
+    get:
+      summary: Lista paginada de estudantes em matrícula on-line
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: situacao
+          in: query
+          schema: { type: string, enum: [pendente, matriculado, lista_intencao] }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        alunoCodigo: { type: integer }
+                        alunoNome: { type: string }
+                        opcaoUe: { type: string }
+                        situacao: { type: string }
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 20 }
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }

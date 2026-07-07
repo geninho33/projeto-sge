@@ -1,0 +1,25 @@
+{
+  "name": "projeto-sge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Migração SGE — PM + BFF + Web (arquitetura híbrida GeneXus/React)",
+  "workspaces": [
+    "sge-pm-api",
+    "sge-pm-web",
+    "sge-bff",
+    "sge-web",
+    "packages/sge-ui"
+  ],
+  "scripts": {
+    "pm:dev": "npm run dev -w sge-pm-api & npm run dev -w sge-pm-web",
+    "pm:api": "npm run dev -w sge-pm-api",
+    "pm:web": "npm run dev -w sge-pm-web",
+    "sge:dev": "npm run dev -w sge-bff & npm run dev -w sge-web",
+    "import:backlog": "node scripts/import-backlog.js",
+    "migrate:pm": "npm run migrate -w sge-pm-api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

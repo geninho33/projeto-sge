@@ -1,0 +1,153 @@
+# SGE-001 - Estudantes da Rematrícula
+
+- Prioridade: P1
+- Modulo: Matrícula On-Line
+- Menu: Trabalhar com Rematrículas > Alunos
+- URL: https://www.sgebr.com.br/sge8105/sgeteste/hSelAlunoRematricula.aspx
+- WebPanel KB: `HSelAlunoRematricula`
+- Tier conversao: **XL**
+- Estimativa API: 19-30 dias
+- Estimativa Frontend: 20-35 dias
+- Risco: alto
+
+## Metricas tecnicas
+
+- Dependencias Procedure: 32
+- Dependencias WebPanel: 14
+- Dependencias Transaction: 0
+- Dependencias DataProvider: 0
+- Dependencias Table: 0
+- Events: 40
+- Subs: 10
+- grid.Load: 1
+- Transaction.Call (suplemento XML): 0
+
+## Arvore completa
+
+```text
+WebPanel:HSelAlunoRematricula [raiz]
+├── Procedure:PBuscaNomeUE [calls_procedure|index]
+├── Procedure:PBuscaNomeUE [calls_procedure_inferred|xml]
+├── Procedure:PConsultaPermissao [calls_procedure_udp_inferred|xml]
+├── Procedure:PConsultaQuadroVaga [calls_procedure|index]
+├── Procedure:PConsultaQuadroVaga [calls_procedure_inferred|xml]
+├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:PDescricaoEtapaNova [calls_procedure_inferred|xml]
+├── Procedure:PGravaAdmLog [calls_procedure|index]
+├── Procedure:PGravaAdmLog [calls_procedure_inferred|xml]
+├── Procedure:PIncluiAlunoRematricula [calls_procedure_inferred|xml]
+├── Procedure:PIncluiAlunoRematricula_Turmas [calls_procedure|index]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── Procedure:PIncluiAlunoRematricula_Turmas [calls_procedure_inferred|xml]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── Procedure:PIncluiRematricula [calls_procedure|index]
+├── Procedure:PIncluiRematricula [calls_procedure_inferred|xml]
+├── Procedure:PObterURL [calls_procedure|index]
+├── Procedure:PObterURL [calls_procedure_inferred|xml]
+├── Procedure:PSituacaoMatricula [calls_procedure|index]
+├── Procedure:PSituacaoMatricula [calls_procedure_inferred|xml]
+├── Procedure:PVerLiberaRemMat [calls_procedure|index]
+├── Procedure:PVerLiberaRemMat [calls_procedure_inferred|xml]
+├── Procedure:RFichaRem8131PDF [calls_procedure|index]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRem8131PDF [calls_procedure_inferred|xml]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRem8363PDF [calls_procedure|index]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRem8363PDF [calls_procedure_inferred|xml]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8253PDF [calls_procedure|index]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8253PDF [calls_procedure_inferred|xml]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8335PDF [calls_procedure|index]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8335PDF [calls_procedure_inferred|xml]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8343PDF [calls_procedure|index]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── Procedure:RFichaRemInf8343PDF [calls_procedure_inferred|xml]
+│   ├── Procedure:PCgcCpf [calls_procedure|index]
+│   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+├── WebPanel:HAlunoExtra [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraAlunoCPF [calls_procedure|index]
+│   │   ├── Procedure:PAtualizaPessoaAluno [calls_procedure|index]
+│   │   │   └── Procedure:PGravaAdmLog [calls_procedure|index]
+│   │   └── Procedure:PRemoveCaracterEspecial [calls_procedure|index]
+│   ├── Procedure:PCalculaDigitoMatricula [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   ├── Procedure:PIncluiAlunoCPF [calls_procedure|index]
+│   │   ├── Procedure:PAtualizaPessoaAluno [calls_procedure|index]
+│   │   │   └── Procedure:PGravaAdmLog [calls_procedure|index]
+│   │   └── Procedure:PRemoveCaracterEspecial [calls_procedure|index]
+│   ├── Procedure:PPesCPFAluno [calls_procedure|index]
+│   └── Procedure:PRemoveCaracterEspecial [calls_procedure|index]
+├── WebPanel:HAlunoRQV2UE [calls_webpanel_inferred|xml]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVAltera [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraNomeAluno [calls_procedure|index]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   ├── Procedure:PIdadeDataCorte [calls_procedure|index]
+│   └── Procedure:PIncluiAluno [calls_procedure|index]
+│       └── Procedure:PIncluiAlunoLog [calls_procedure|index]
+│           └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVAlteraDeferida [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraNomeAluno [calls_procedure|index]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   ├── Procedure:PIdadeDataCorte [calls_procedure|index]
+│   └── Procedure:PIncluiAluno [calls_procedure|index]
+│       └── Procedure:PIncluiAlunoLog [calls_procedure|index]
+│           └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVAlteraSituacao [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraNomeAluno [calls_procedure|index]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   ├── Procedure:PIdadeDataCorte [calls_procedure|index]
+│   └── Procedure:PIncluiAluno [calls_procedure|index]
+│       └── Procedure:PIncluiAlunoLog [calls_procedure|index]
+│           └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVConfirmar [calls_webpanel_inferred|xml]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVExclui [calls_webpanel_inferred|xml]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HAlunoRQVInclui [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraCadastroAlunoQV [calls_procedure|index]
+│   ├── Procedure:PAlteraNomeAluno [calls_procedure|index]
+│   ├── Procedure:PConsultaEnturmacaoAluno [calls_procedure|index]
+│   │   └── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   ├── Procedure:PIdadeDataCorte [calls_procedure|index]
+│   ├── Procedure:PIncluiAluno [calls_procedure|index]
+│   │   └── Procedure:PIncluiAlunoLog [calls_procedure|index]
+│   │       └── Procedure:PGravaAdmLog [calls_procedure|index]
+│   └── Procedure:PRemoveCaracterEspecial [calls_procedure|index]
+├── WebPanel:HConfirmarRematricula [calls_webpanel_inferred|xml]
+│   ├── Procedure:PAlteraUEMatricula [calls_procedure|index]
+│   ├── Procedure:PDescricaoEtapaNova [calls_procedure|index]
+│   └── Procedure:PGravaAdmLog [calls_procedure|index]
+├── WebPanel:HConfirmarRematriculaEI [calls_webpanel_inferred|xml]
+│   ├── Procedure:PEnviarEmail [calls_procedure|index]
+│   ├── Procedure:PGravaAdmLog [calls_procedure|index]
+│   └── Procedure:PParametrosEmailServidor [calls_procedure|index]
+├── WebPanel:HEnviarSMSRematriculaOnLine [calls_webpanel_inferred|xml]
+├── WebPanel:HMostraLogs [calls_webpanel_inferred|xml]
+├── WebPanel:HSelAcessoPublico [calls_webpanel_inferred|xml]
+├── WebPanel:HSelAlunoDocumentos [calls_webpanel_inferred|xml]
+│   └── Procedure:PObterURL [calls_procedure|index]
+└── WebPanel:HSelAlunoRematricula [calls_webpanel_inferred|xml] (ciclo)
+```

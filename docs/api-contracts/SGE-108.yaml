@@ -1,0 +1,40 @@
+openapi: 3.0.3
+info:
+  title: SGE-108 — Tabela de Bairros
+  version: 1.0.0
+paths:
+  /api/v1/bairros:
+    get:
+      summary: Lista paginada de bairros
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        baiCodigo: { type: integer }
+                        baiNome: { type: string }
+                        baiStatus: { type: string, enum: [A, I] }
+                  meta:
+                    type: object
+                    properties:
+                      page: { type: integer }
+                      total: { type: integer }
+                      totalPages: { type: integer }

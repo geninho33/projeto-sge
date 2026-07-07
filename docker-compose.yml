@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: sge_pm_dev
+      MYSQL_DATABASE: sge_pm
+    volumes:
+      - sge_pm_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  sge_pm_mysql:

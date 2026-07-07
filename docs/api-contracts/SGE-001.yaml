@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: SGE-001 — Estudantes da Rematrícula
+  version: 0.1.0-spike
+  description: |
+    Spike de contrato API — Sprint 3.
+    Tela legado: hSelAlunoRematricula.aspx
+    Score: 473 | Grid + Formulário | P1 crítico
+paths:
+  /api/v1/rematriculas/alunos:
+    get:
+      summary: Lista paginada de estudantes em rematrícula
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/OrderBy'
+        - $ref: '#/components/parameters/OrderDir'
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: turmaCodigo
+          in: query
+          schema: { type: integer }
+        - $ref: '#/components/parameters/XSgeAno'
+        - $ref: '#/components/parameters/XSgeUe'
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAlunoRematricula'
+    post:
+      summary: Inicia/confirma rematrícula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RematriculaPayload'
+  /api/v1/rematriculas/alunos/{alunoCodigo}:
+    get:
+      summary: Detalhe do estudante + schema do formulário
+      parameters:
+        - name: alunoCodigo
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlunoRematriculaDetail'
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 20, maximum: 100 }
+    OrderBy:
+      name: orderBy
+      in: query
+      schema: { type: string }
+    OrderDir:
+      name: orderDir
+      in: query
+      schema: { type: string, enum: [asc, desc] }
+    XSgeAno:
+      name: X-SGE-Ano
+      in: header
+      required: true
+      schema: { type: string }
+    XSgeUe:
+      name: X-SGE-UE
+      in: header
+      required: true
+      schema: { type: string }
+  schemas:
+    PaginatedAlunoRematricula:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlunoRematriculaRow'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    AlunoRematriculaRow:
+      type: object
+      properties:
+        alunoCodigo: { type: integer }
+        alunoNome: { type: string }
+        turmaDescricao: { type: string }
+        situacaoRematricula: { type: string }
+        transporteEscolar: { type: boolean }
+    AlunoRematriculaDetail:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AlunoRematriculaRow'
+        schema:
+          type: object
+          properties:
+            fields:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  type: { type: string }
+                  required: { type: boolean }
+            actions:
+              type: array
+              items: { type: string }
+    RematriculaPayload:
+      type: object
+      required: [alunoCodigo, turmaCodigo]
+      properties:
+        alunoCodigo: { type: integer }
+        turmaCodigo: { type: integer }
+        opcaoTransporte: { type: boolean }
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }

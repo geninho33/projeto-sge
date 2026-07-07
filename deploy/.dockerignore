@@ -1,0 +1,46 @@
+# Dependências e builds
+**/node_modules
+**/dist
+**/.vite
+**/.cache
+**/coverage
+
+# Ambiente e segredos
+**/.env
+**/.env.*
+!**/.env.example
+
+# Git e IDE
+.git
+.gitignore
+**/.idea
+**/.vscode
+**/*.swp
+**/*.swo
+
+# Logs e temporários
+**/*.log
+**/tmp
+**/temp
+**/.DS_Store
+**/Thumbs.db
+
+# Documentação e desenvolvimento
+docs/
+genexus/
+**/agent-transcripts/
+deploy/dist/
+deploy/backups/
+
+# Screenshots do crawl (reconstruíveis; reduz tamanho da imagem)
+crawl/screenshots/
+
+# Pacotes não usados no PM em produção
+sge-bff/
+sge-web/
+packages/
+
+# Testes
+**/__tests__
+**/*.test.js
+**/*.spec.js

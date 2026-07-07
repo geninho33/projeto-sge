@@ -1,0 +1,65 @@
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no arquivo .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sge_pm}
+      MYSQL_USER: ${MYSQL_USER:-sge_pm}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD no arquivo .env}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    image: projeto-sge-api:latest
+    restart: unless-stopped
+    environment:
+      PORT: 3010
+      DB_DRIVER: ${DB_DRIVER:-sqlite}
+      SQLITE_PATH: /repo/sge-pm-api/data/sge_pm.sqlite
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CRAWL_ROOT: /repo/crawl
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-sge_pm}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sge_pm}
+    volumes:
+      - api_data:/repo/sge-pm-api/data
+      - api_avatars:/repo/sge-pm-api/public/avatars
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3010/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    image: projeto-sge-web:latest
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
+  api_data:
+  api_avatars:

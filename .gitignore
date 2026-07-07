@@ -1,0 +1,53 @@
+# Dependências
+node_modules/
+**/node_modules/
+
+# Builds e cache
+dist/
+**/dist/
+.vite/
+**/.vite/
+.cache/
+**/.cache/
+coverage/
+**/coverage/
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+!**/.env.example
+deploy/.env
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# Uploads e dados locais
+sge-pm-api/data/
+sge-pm-api/public/avatars/*
+!sge-pm-api/public/avatars/.gitkeep
+backups/
+deploy/backups/
+deploy/dist/
+
+# Temporários
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+
+# SO e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sublime-*
+
+# Docker / deploy artefatos locais
+*.tar.gz
+
+# Pacotes não versionados em produção (opcional dev)
+# crawl/screenshots/ — mantido no repo para visão backlog; excluído do pacote deploy

@@ -1,0 +1,9 @@
+INSERT IGNORE INTO sge_pm_usuario_skill (usuario_id, skill_id, nivel) VALUES
+(3, (SELECT id FROM sge_pm_skill WHERE codigo='SK-FE-02'), 'senior'),
+(3, (SELECT id FROM sge_pm_skill WHERE codigo='SK-FE-05'), 'senior'),
+(3, (SELECT id FROM sge_pm_skill WHERE codigo='SK-FE-04'), 'pleno'),
+(4, (SELECT id FROM sge_pm_skill WHERE codigo='SK-GX-03'), 'senior'),
+(4, (SELECT id FROM sge_pm_skill WHERE codigo='SK-GX-04'), 'senior'),
+(5, (SELECT id FROM sge_pm_skill WHERE codigo='SK-QA-01'), 'pleno'),
+(2, (SELECT id FROM sge_pm_skill WHERE codigo='SK-GX-05'), 'senior'),
+(1, (SELECT id FROM sge_pm_skill WHERE codigo='SK-PM-01'), 'pleno');
