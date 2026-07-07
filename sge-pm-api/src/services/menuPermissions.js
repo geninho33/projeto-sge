@@ -1,11 +1,20 @@
+/**
+ * Estrutura de menus alinhada à navegação do AppShell (App.jsx / AppShell.jsx).
+ */
 export const MENU_STRUCTURE = [
   {
     grupo: "Principal",
     itens: [
       { key: "dashboard", label: "Dashboard" },
-      { key: "minhas_demandas", label: "Minhas Demandas" },
-      { key: "meu_kanban", label: "Atividades" },
       { key: "demandas", label: "Demandas" },
+    ],
+  },
+  {
+    grupo: "Dev",
+    itens: [
+      { key: "meu_kanban", label: "Atividades" },
+      { key: "consulta_tarefas", label: "Consultar Tarefas" },
+      { key: "consulta_apontamentos", label: "Horas Trabalhadas" },
     ],
   },
   {
@@ -30,8 +39,6 @@ export const MENU_STRUCTURE = [
   },
 ];
 
-// Sprints (key: sprints) desativado na navegação — implementação mantida em /sprints
-
 export const NIVEL_PERMISSAO = [
   { value: 0, label: "Sem acesso" },
   { value: 1, label: "Somente consulta" },
@@ -42,8 +49,32 @@ export const NIVEL_PERMISSAO = [
   { value: 6, label: "Administração total" },
 ];
 
+const ALL_MENU_KEYS = MENU_STRUCTURE.flatMap((g) => g.itens.map((i) => i.key));
+
+/** Permissões padrão por perfil de sistema (codigo em sge_pm_perfil). */
+export const DEFAULT_PROFILE_PERMISSIONS = {
+  gestor_proj: Object.fromEntries(ALL_MENU_KEYS.map((k) => [k, 6])),
+  desenvolvedor: {
+    dashboard: 1,
+    demandas: 1,
+    meu_kanban: 4,
+    consulta_tarefas: 1,
+    consulta_apontamentos: 1,
+    kanban: 1,
+    backlog: 1,
+    skills: 1,
+    demandas_legado: 0,
+    projetos: 0,
+    admin_perfis: 0,
+    admin_tipos: 0,
+    admin_usuarios: 0,
+    admin_migracoes: 0,
+    admin_mapeamento: 0,
+  },
+};
+
 export function flattenMenuKeys() {
-  return MENU_STRUCTURE.flatMap((g) => g.itens.map((i) => i.key));
+  return [...ALL_MENU_KEYS];
 }
 
 export function hasPermission(permissoes, menuKey, minLevel = 1) {

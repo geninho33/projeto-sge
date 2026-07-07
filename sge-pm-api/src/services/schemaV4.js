@@ -1,4 +1,5 @@
 import { getSqlite } from "../db-sqlite.js";
+import { DEFAULT_PROFILE_PERMISSIONS, flattenMenuKeys } from "./menuPermissions.js";
 
 function hasColumn(s, table, column) {
   return s.pragma(`table_info(${table})`).some((c) => c.name === column);
@@ -236,13 +237,21 @@ function seedV4(s) {
 
   const adminPerfil = s.prepare("SELECT id FROM sge_pm_perfil WHERE codigo = 'admin'").get();
   if (adminPerfil) {
-    const menus = [
-      "dashboard", "minhas_demandas", "meu_kanban", "demandas", "projetos",
-      "admin_perfis", "admin_tipos", "admin_usuarios", "admin_migracoes",
-      "admin_mapeamento", "admin_skills", "kanban", "backlog", "sprints",
-    ];
-    const insPerm = s.prepare("INSERT OR IGNORE INTO sge_pm_perfil_permissao (perfil_id, menu_key, nivel) VALUES (?, ?, 6)");
-    for (const m of menus) insPerm.run(adminPerfil.id, m);
+    const insPerm = s.prepare(
+      "INSERT OR IGNORE INTO sge_pm_perfil_permissao (perfil_id, menu_key, nivel) VALUES (?, ?, 6)"
+    );
+    for (const key of flattenMenuKeys()) insPerm.run(adminPerfil.id, key);
+  }
+
+  const insPermProfile = s.prepare(
+    "INSERT OR IGNORE INTO sge_pm_perfil_permissao (perfil_id, menu_key, nivel) VALUES (?, ?, ?)"
+  );
+  for (const [codigo, perms] of Object.entries(DEFAULT_PROFILE_PERMISSIONS)) {
+    const pf = s.prepare("SELECT id FROM sge_pm_perfil WHERE codigo = ?").get(codigo);
+    if (!pf) continue;
+    for (const [menu_key, nivel] of Object.entries(perms)) {
+      insPermProfile.run(pf.id, menu_key, nivel);
+    }
   }
 
   const usuarios = s.prepare("SELECT id, perfil FROM sge_pm_usuario WHERE ativo = 1").all();

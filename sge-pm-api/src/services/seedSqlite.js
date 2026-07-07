@@ -1,4 +1,5 @@
 import { getSqlite, sqliteQuery } from "../db-sqlite.js";
+import { DEFAULT_PROFILE_PERMISSIONS, flattenMenuKeys } from "./menuPermissions.js";
 
 const SKILLS = [
   ["SK-GX-01", "GeneXus 18 — Transactions/BC", "backend", "pleno"],
@@ -30,11 +31,8 @@ export function seedSqliteIfEmpty() {
   for (const sk of SKILLS) insSkill.run(...sk);
 
   const users = [
-    ["Gestor do Projeto", "gestor@sge.local", "Gestor de Projeto", "gestor"],
-    ["Tech Lead", "techlead@sge.local", "Tech Lead", "tech_lead"],
-    ["Dev Frontend Sênior", "devfront@sge.local", "Desenvolvedor Frontend", "dev_front"],
-    ["Dev Backend GeneXus", "devback@sge.local", "Desenvolvedor GeneXus", "dev_back"],
-    ["QA Pleno", "qa@sge.local", "Analista de QA", "qa"],
+    ["Gestor", "gestor@sge.local", "Gestor de Projeto", "gestor"],
+    ["Eugênio José da Costa", "geninho33@gmail.com", "Desenvolvedor", "dev_front"],
   ];
   const insUser = s.prepare("INSERT INTO sge_pm_usuario (nome, email, cargo, perfil) VALUES (?, ?, ?, ?)");
   for (const u of users) insUser.run(...u);
