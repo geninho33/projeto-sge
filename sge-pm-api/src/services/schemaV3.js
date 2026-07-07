@@ -79,8 +79,8 @@ export function applySchemaV3() {
     }
     s.prepare("UPDATE sge_pm_demanda SET situacao_trabalho = 'nao_iniciada' WHERE situacao_trabalho IS NULL").run();
     s.prepare("INSERT INTO sge_pm_schema_migrations (name) VALUES ('005_schema_v3_16flow')").run();
+    seedDemandasExemplo(s);
   }
-  seedDemandasExemplo(s);
 }
 
 function seedDemandasExemplo(s) {

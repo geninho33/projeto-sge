@@ -5,7 +5,6 @@
  * Uso: node scripts/resetAmbiente.mjs
  */
 import { getSqlite } from "../src/db-sqlite.js";
-import { initDb } from "../src/db.js";
 import { DEFAULT_PROFILE_PERMISSIONS, flattenMenuKeys } from "../src/services/menuPermissions.js";
 
 const KEEP_EMAILS = ["gestor@sge.local", "geninho33@gmail.com"];
@@ -129,16 +128,13 @@ async function syncProfilePermissions() {
 }
 
 async function main() {
-  console.log("Inicializando banco...");
-  await initDb();
-
-  console.log("\n1) Limpando demandas, atividades, tarefas e apontamentos...");
+  console.log("Limpando dados operacionais...");
   await clearOperationalData();
 
-  console.log("\n2) Mantendo apenas Gestor e Eugênio...");
+  console.log("\n1) Removendo usuários extras (Gestor e Eugênio permanecem)...");
   await pruneUsers();
 
-  console.log("\n3) Sincronizando permissões conforme menu...");
+  console.log("\n2) Sincronizando permissões conforme menu...");
   await syncProfilePermissions();
 
   console.log("\nConcluído.");
