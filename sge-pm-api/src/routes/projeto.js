@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { query, queryOne } from "../db.js";
 import { ensureArray } from "../lib/ensureArray.js";
+import { isManagerUser } from "../services/profileService.js";
 
 const router = Router();
 
@@ -25,7 +26,7 @@ router.get("/:id", async (req, res, next) => {
 
 router.get("/:id/dashboard-gestor", async (req, res, next) => {
   try {
-    if (!["gestor", "tech_lead"].includes(req.user.perfil)) {
+    if (!isManagerUser(req.user)) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Acesso restrito a gestores" } });
     }
 

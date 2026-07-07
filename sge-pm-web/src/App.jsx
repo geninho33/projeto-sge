@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { hasPermission } from "./utils/permissions";
 import AppShell from "./components/layout/AppShell";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -30,10 +31,10 @@ function PrivateRoute({ children }) {
   return children;
 }
 
-function AdminRoute({ children }) {
+function PermissionRoute({ menuKey, minLevel = 1, children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
-  if (!["gestor", "tech_lead"].includes(user?.perfil)) {
+  if (!hasPermission(user?.permissoes, menuKey, minLevel)) {
     return <Navigate to="/" replace />;
   }
   return children;
@@ -52,26 +53,25 @@ export default function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="minhas-demandas" element={<MinhasDemandasPage />} />
-        <Route path="meu-kanban" element={<MeuKanbanPage />} />
-        <Route path="projetos" element={<AdminRoute><ProjetosPage /></AdminRoute>} />
-        <Route path="demandas-flow" element={<DemandasFlowPage />} />
-        <Route path="consulta/tarefas" element={<ConsultaTarefasPage />} />
-        <Route path="consulta/apontamentos" element={<ConsultaApontamentosPage />} />
-        <Route path="demandas-flow/:id" element={<DemandaDetailPage />} />
-        <Route path="kanban" element={<BacklogKanban />} />
-        <Route path="backlog" element={<BacklogList />} />
-        <Route path="sprints" element={<SprintsPage />} /> {/* menu desativado — rota mantida */}
+        <Route path="meu-kanban" element={<PermissionRoute menuKey="meu_kanban"><MeuKanbanPage /></PermissionRoute>} />
+        <Route path="projetos" element={<PermissionRoute menuKey="projetos"><ProjetosPage /></PermissionRoute>} />
+        <Route path="demandas-flow" element={<PermissionRoute menuKey="demandas"><DemandasFlowPage /></PermissionRoute>} />
+        <Route path="consulta/tarefas" element={<PermissionRoute menuKey="consulta_tarefas"><ConsultaTarefasPage /></PermissionRoute>} />
+        <Route path="consulta/apontamentos" element={<PermissionRoute menuKey="consulta_apontamentos"><ConsultaApontamentosPage /></PermissionRoute>} />
+        <Route path="demandas-flow/:id" element={<PermissionRoute menuKey="demandas"><DemandaDetailPage /></PermissionRoute>} />
+        <Route path="kanban" element={<PermissionRoute menuKey="kanban"><BacklogKanban /></PermissionRoute>} />
+        <Route path="backlog" element={<PermissionRoute menuKey="backlog"><BacklogList /></PermissionRoute>} />
+        <Route path="sprints" element={<SprintsPage />} />
         <Route path="sprint-board" element={<SprintBoard />} />
-        <Route path="demandas" element={<DemandasPage />} />
+        <Route path="demandas" element={<PermissionRoute menuKey="demandas_legado"><DemandasPage /></PermissionRoute>} />
 
-        <Route path="admin/perfis" element={<AdminRoute><PerfisPage /></AdminRoute>} />
-        <Route path="admin/tipos-atividade" element={<AdminRoute><TiposAtividadePage /></AdminRoute>} />
-        <Route path="admin/migracoes" element={<AdminRoute><MigracoesPage /></AdminRoute>} />
-        <Route path="admin/mapeamento" element={<AdminRoute><MapeamentoPage /></AdminRoute>} />
-        <Route path="admin/skills" element={<AdminRoute><SkillsPage /></AdminRoute>} />
-        <Route path="admin/usuarios" element={<AdminRoute><UsuariosPerfisPage /></AdminRoute>} />
+        <Route path="admin/perfis" element={<PermissionRoute menuKey="admin_perfis"><PerfisPage /></PermissionRoute>} />
+        <Route path="admin/tipos-atividade" element={<PermissionRoute menuKey="admin_tipos"><TiposAtividadePage /></PermissionRoute>} />
+        <Route path="admin/migracoes" element={<PermissionRoute menuKey="admin_migracoes"><MigracoesPage /></PermissionRoute>} />
+        <Route path="admin/mapeamento" element={<PermissionRoute menuKey="admin_mapeamento"><MapeamentoPage /></PermissionRoute>} />
+        <Route path="admin/skills" element={<PermissionRoute menuKey="skills"><SkillsPage /></PermissionRoute>} />
+        <Route path="admin/usuarios" element={<PermissionRoute menuKey="admin_usuarios"><UsuariosPerfisPage /></PermissionRoute>} />
 
-        {/* Redirecionamentos legados */}
         <Route path="migracoes" element={<Navigate to="/admin/migracoes" replace />} />
         <Route path="mapeamento" element={<Navigate to="/admin/mapeamento" replace />} />
         <Route path="skills" element={<Navigate to="/admin/skills" replace />} />

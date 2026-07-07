@@ -6,6 +6,7 @@ import { query, queryOne } from "../db.js";
 import { hashPassword } from "../services/authService.js";
 import { logHistorico, getHistorico } from "../services/historico.js";
 import { requirePerfil } from "../middleware/auth.js";
+import { syncUserProfiles, normalizeProfileCode } from "../services/profileService.js";
 
 const router = Router();
 
@@ -25,7 +26,9 @@ const USER_FIELDS = "id, nome, email, cargo, perfil, perfis, avatar_url, ativo, 
 
 function parseUser(row) {
   if (!row) return row;
-  row.perfis = row.perfis ? JSON.parse(row.perfis) : (row.perfil ? [row.perfil] : []);
+  const perfis = row.perfis ? JSON.parse(row.perfis) : (row.perfil ? [row.perfil] : []);
+  row.perfis = perfis.map(normalizeProfileCode);
+  row.perfil = row.perfis[0] || normalizeProfileCode(row.perfil);
   return row;
 }
 
@@ -84,14 +87,16 @@ router.get("/:id/historico", async (req, res, next) => {
   }
 });
 
-router.post("/", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.post("/", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     const { nome, email, senha, cargo, perfil, perfis } = req.body || {};
     if (!nome?.trim() || !email?.trim()) {
       return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Nome e e-mail são obrigatórios" } });
     }
-    const perfilPrincipal = perfil || (Array.isArray(perfis) && perfis.length ? perfis[0] : "dev_front");
-    const perfisJson = JSON.stringify(Array.isArray(perfis) && perfis.length ? perfis : (perfil ? [perfil] : ["dev_front"]));
+    const perfisArr = (Array.isArray(perfis) && perfis.length ? perfis : perfil ? [perfil] : ["desenvolvedor"])
+      .map(normalizeProfileCode);
+    const perfilPrincipal = perfisArr[0];
+    const perfisJson = JSON.stringify(perfisArr);
     const hash = await hashPassword(senha || "Sge@2026");
     await query(
       `INSERT INTO sge_pm_usuario (nome, email, senha_hash, cargo, perfil, perfis, ativo) VALUES (?, ?, ?, ?, ?, ?, 1)`,
@@ -100,6 +105,7 @@ router.post("/", requirePerfil("gestor", "tech_lead"), async (req, res, next) =>
     const created = await queryOne(`SELECT ${USER_FIELDS} FROM sge_pm_usuario WHERE lower(email) = ?`, [
       email.trim().toLowerCase(),
     ]);
+    await syncUserProfiles(created.id, perfisArr);
     parseUser(created);
     await logHistorico("usuario", created.id, req.user.id, "criado", { nome, email, perfil: perfilPrincipal, perfis: created.perfis });
     res.status(201).json({ data: created });
@@ -111,7 +117,7 @@ router.post("/", requirePerfil("gestor", "tech_lead"), async (req, res, next) =>
   }
 });
 
-router.put("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.put("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     const { nome, email, cargo, perfil, perfis, senha, ativo } = req.body || {};
     const existing = await queryOne(`SELECT * FROM sge_pm_usuario WHERE id = ? AND deleted_at IS NULL`, [req.params.id]);
@@ -122,11 +128,12 @@ router.put("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) 
     if (nome) { updates.push("nome = ?"); params.push(nome.trim()); }
     if (email) { updates.push("email = ?"); params.push(email.trim().toLowerCase()); }
     if (cargo !== undefined) { updates.push("cargo = ?"); params.push(cargo); }
-    if (perfil) { updates.push("perfil = ?"); params.push(perfil); }
+    if (perfil) { updates.push("perfil = ?"); params.push(normalizeProfileCode(perfil)); }
     if (Array.isArray(perfis)) {
+      const perfisNorm = perfis.map(normalizeProfileCode);
       updates.push("perfis = ?");
-      params.push(JSON.stringify(perfis));
-      if (!perfil && perfis.length) { updates.push("perfil = ?"); params.push(perfis[0]); }
+      params.push(JSON.stringify(perfisNorm));
+      if (!perfil && perfisNorm.length) { updates.push("perfil = ?"); params.push(perfisNorm[0]); }
     }
     if (ativo !== undefined) { updates.push("ativo = ?"); params.push(ativo ? 1 : 0); }
     if (senha) {
@@ -137,8 +144,16 @@ router.put("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) 
 
     params.push(req.params.id);
     await query(`UPDATE sge_pm_usuario SET ${updates.join(", ")} WHERE id = ?`, params);
-    await logHistorico("usuario", req.params.id, req.user.id, "atualizado", req.body);
     const updated = await queryOne(`SELECT ${USER_FIELDS} FROM sge_pm_usuario WHERE id = ?`, [req.params.id]);
+    const perfisToSync = Array.isArray(perfis)
+      ? perfis.map(normalizeProfileCode)
+      : updated.perfis
+        ? JSON.parse(updated.perfis)
+        : updated.perfil
+          ? [updated.perfil]
+          : [];
+    if (perfisToSync.length) await syncUserProfiles(req.params.id, perfisToSync);
+    await logHistorico("usuario", req.params.id, req.user.id, "atualizado", req.body);
     parseUser(updated);
     res.json({ data: updated });
   } catch (err) {
@@ -157,7 +172,7 @@ router.post("/:id/avatar", upload.single("avatar"), async (req, res, next) => {
   }
 });
 
-router.patch("/:id/ativar", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.patch("/:id/ativar", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     const { ativo } = req.body;
     await query(`UPDATE sge_pm_usuario SET ativo = ? WHERE id = ? AND deleted_at IS NULL`, [ativo ? 1 : 0, req.params.id]);
@@ -168,7 +183,7 @@ router.patch("/:id/ativar", requirePerfil("gestor", "tech_lead"), async (req, re
   }
 });
 
-router.delete("/:id", requirePerfil("gestor"), async (req, res, next) => {
+router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     await query(`UPDATE sge_pm_usuario SET deleted_at = datetime('now'), ativo = 0 WHERE id = ?`, [req.params.id]);
     await logHistorico("usuario", req.params.id, req.user.id, "exclusao_logica");

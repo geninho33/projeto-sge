@@ -27,6 +27,11 @@ function StatusCell({ status }) {
   );
 }
 
+function userHasPerfil(u, codigo) {
+  const perfis = Array.isArray(u.perfis) && u.perfis.length ? u.perfis : (u.perfil ? [u.perfil] : []);
+  return perfis.includes(codigo);
+}
+
 export default function MapeamentoPage() {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
@@ -188,13 +193,13 @@ export default function MapeamentoPage() {
             <div className="form-grid">
               <Select label="Dev Frontend" value={form.id_user_front || ""} onChange={(e) => setForm({ ...form, id_user_front: e.target.value })}>
                 <option value="">—</option>
-                {usuarios.filter((u) => u.perfil === "dev_front").map((u) => (
+                {usuarios.filter((u) => userHasPerfil(u, "desenvolvedor")).map((u) => (
                   <option key={u.id} value={u.id}>{u.nome}</option>
                 ))}
               </Select>
               <Select label="Dev Backend" value={form.id_user_back || ""} onChange={(e) => setForm({ ...form, id_user_back: e.target.value })}>
                 <option value="">—</option>
-                {usuarios.filter((u) => u.perfil === "dev_back").map((u) => (
+                {usuarios.filter((u) => userHasPerfil(u, "desenvolvedor")).map((u) => (
                   <option key={u.id} value={u.id}>{u.nome}</option>
                 ))}
               </Select>

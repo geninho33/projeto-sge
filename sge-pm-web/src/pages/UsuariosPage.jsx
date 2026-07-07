@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiJson } from "../api/client";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -7,24 +7,27 @@ import { Modal, ModalActions } from "../components/ui/Modal";
 import { Alert } from "../components/ui/Alert";
 import { PageLoader } from "../components/ui/Spinner";
 
-const PERFIL_LABEL = {
-  gestor: "Gestor",
-  tech_lead: "Tech Lead",
-  dev_front: "Dev Frontend",
-  dev_back: "Dev Backend",
-  qa: "QA",
-};
-
-const PERFIS = Object.entries(PERFIL_LABEL);
-
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
+  const [perfisCatalog, setPerfisCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [q, setQ] = useState("");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const perfilLabel = useMemo(
+    () => Object.fromEntries(perfisCatalog.map((p) => [p.codigo, p.nome])),
+    [perfisCatalog]
+  );
+
+  const defaultPerfil = perfisCatalog.find((p) => p.codigo === "desenvolvedor")?.codigo || perfisCatalog[0]?.codigo || "";
+
+  const loadPerfis = useCallback(async () => {
+    const { data } = await apiJson("/perfis");
+    setPerfisCatalog(data.filter((p) => p.ativo));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,10 +43,14 @@ export default function UsuariosPage() {
     }
   }, [q]);
 
+  useEffect(() => {
+    loadPerfis().catch((e) => setError(e.message));
+  }, [loadPerfis]);
+
   useEffect(() => { load(); }, [load]);
 
   const openCreate = () => {
-    setForm({ nome: "", email: "", cargo: "", perfil: "dev_front", ativo: 1, senha: "" });
+    setForm({ nome: "", email: "", cargo: "", perfil: defaultPerfil, ativo: 1, senha: "" });
     setModal("create");
   };
 
@@ -79,7 +86,7 @@ export default function UsuariosPage() {
     load();
   };
 
-  if (loading && !usuarios.length) return <PageLoader />;
+  if ((loading && !usuarios.length) || !perfisCatalog.length) return <PageLoader />;
 
   return (
     <div className="page">
@@ -124,7 +131,7 @@ export default function UsuariosPage() {
                   <td><strong>{u.nome}</strong></td>
                   <td>{u.email}</td>
                   <td>{u.cargo || "—"}</td>
-                  <td>{PERFIL_LABEL[u.perfil] || u.perfil}</td>
+                  <td>{perfilLabel[u.perfil] || u.perfil}</td>
                   <td>{u.ativo ? "Ativo" : "Inativo"}</td>
                   <td>{u.created_at?.slice(0, 10) || "—"}</td>
                   <td>{u.ultimo_acesso?.slice(0, 16) || "—"}</td>
@@ -145,8 +152,8 @@ export default function UsuariosPage() {
           <Input label="Nome" value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
           <Input label="E-mail" type="email" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input label="Cargo" value={form.cargo || ""} onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
-          <Select label="Perfil" value={form.perfil || "dev_front"} onChange={(e) => setForm({ ...form, perfil: e.target.value })}>
-            {PERFIS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          <Select label="Perfil" value={form.perfil || defaultPerfil} onChange={(e) => setForm({ ...form, perfil: e.target.value })}>
+            {perfisCatalog.map((p) => <option key={p.codigo} value={p.codigo}>{p.nome}</option>)}
           </Select>
           <Input
             label={modal === "create" ? "Senha" : "Nova senha (opcional)"}

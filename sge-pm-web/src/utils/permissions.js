@@ -1,7 +1,12 @@
+export function hasPermission(permissoes, menuKey, minLevel = 1) {
+  const nivel = permissoes?.[menuKey] ?? 0;
+  return nivel >= minLevel;
+}
+
 export function isAdmin(user) {
-  const perfis = user?.perfisArr || user?.perfis || [];
-  const all = [...(Array.isArray(perfis) ? perfis : []), user?.perfil].filter(Boolean);
-  return all.includes("gestor") || all.includes("tech_lead");
+  return hasPermission(user?.permissoes, "admin_usuarios", 1)
+    || hasPermission(user?.permissoes, "admin_perfis", 1)
+    || hasPermission(user?.permissoes, "projetos", 3);
 }
 
 export function canManageAtividadeTarefas(user, atividade) {

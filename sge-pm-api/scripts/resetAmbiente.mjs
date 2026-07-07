@@ -110,7 +110,7 @@ async function syncProfilePermissions() {
     console.log(`  Permissões sincronizadas: ${codigo}`);
   }
 
-  const map = { gestor: "gestor_proj", dev_front: "desenvolvedor" };
+  const map = { gestor_proj: "gestor_proj", desenvolvedor: "desenvolvedor" };
   const insUP = s.prepare(`INSERT OR REPLACE INTO sge_pm_usuario_perfil (usuario_id, perfil_id) VALUES (?, ?)`);
   const users = s
     .prepare(`SELECT id, email, perfil FROM sge_pm_usuario WHERE deleted_at IS NULL AND ativo = 1`)

@@ -4,6 +4,7 @@ import { createApontamento, validateNoOverlap } from "../services/apontamentoSer
 import { notifyGestor } from "../services/apontamentoService.js";
 import { calcDurationMinutes } from "../services/timeUtils.js";
 import { requirePerfil } from "../middleware/auth.js";
+import { isManagerUser } from "../services/profileService.js";
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.get("/", async (req, res, next) => {
 
     if (demanda_id) { where.push("a.demanda_id = ?"); params.push(demanda_id); }
     if (usuario_id) { where.push("a.usuario_id = ?"); params.push(usuario_id); }
-    else if (!["gestor", "tech_lead"].includes(req.user.perfil)) {
+    else if (!isManagerUser(req.user)) {
       where.push("a.usuario_id = ?");
       params.push(req.user.id);
     }
@@ -42,13 +43,13 @@ router.post("/", async (req, res, next) => {
     const b = req.body || {};
     const usuarioId = b.usuario_id ?? req.user.id;
 
-    if (usuarioId !== req.user.id && !["gestor", "tech_lead"].includes(req.user.perfil)) {
+    if (usuarioId !== req.user.id && !isManagerUser(req.user)) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Sem permissão" } });
     }
 
     const demanda = await queryOne(`SELECT responsavel_id FROM sge_pm_demanda WHERE id = ?`, [b.demanda_id]);
     if (!demanda) return res.status(404).json({ error: { code: "NOT_FOUND" } });
-    if (demanda.responsavel_id !== usuarioId && !["gestor", "tech_lead"].includes(req.user.perfil)) {
+    if (demanda.responsavel_id !== usuarioId && !isManagerUser(req.user)) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Só é possível apontar em demandas atribuídas" } });
     }
 
@@ -71,7 +72,7 @@ router.put("/:id", async (req, res, next) => {
     const existing = await queryOne(`SELECT * FROM sge_pm_apontamento WHERE id = ?`, [req.params.id]);
     if (!existing) return res.status(404).json({ error: { code: "NOT_FOUND" } });
 
-    if (existing.usuario_id !== req.user.id && !["gestor", "tech_lead"].includes(req.user.perfil)) {
+    if (existing.usuario_id !== req.user.id && !isManagerUser(req.user)) {
       return res.status(403).json({ error: { code: "FORBIDDEN" } });
     }
 
@@ -100,7 +101,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     await query(`DELETE FROM sge_pm_apontamento WHERE id = ?`, [req.params.id]);
     res.json({ data: { ok: true } });

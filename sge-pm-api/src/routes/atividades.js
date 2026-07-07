@@ -3,6 +3,7 @@ import { query, queryOne } from "../db.js";
 import { logHistorico } from "../services/historico.js";
 import { validateFase } from "../services/demandaFlow.js";
 import { getTarefas, recalcAtividadeStatus } from "../services/atividadeStatus.js";
+import { isManagerUser } from "../services/profileService.js";
 import {
   getTarefaEnriched,
   tryConcluirTarefa,
@@ -99,7 +100,7 @@ router.get("/", async (req, res, next) => {
     const params = [];
     if (demanda_id) { where.push("a.demanda_id = ?"); params.push(demanda_id); }
     if (executor_id) { where.push("a.executor_id = ?"); params.push(executor_id); }
-    else if (!["gestor", "tech_lead"].includes(req.user.perfil)) {
+    else if (!isManagerUser(req.user)) {
       where.push("a.executor_id = ?"); params.push(req.user.id);
     }
     if (fase) { where.push("a.fase = ?"); params.push(fase); }

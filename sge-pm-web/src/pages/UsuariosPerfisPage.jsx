@@ -12,18 +12,9 @@ import { Alert } from "../components/ui/Alert";
 import { PageLoader } from "../components/ui/Spinner";
 import { SortableTh } from "../components/ui/SortableTh";
 
-const PERFIS = [
-  { id: "gestor", label: "Gestor" },
-  { id: "tech_lead", label: "Tech Lead" },
-  { id: "dev_front", label: "Dev Frontend" },
-  { id: "dev_back", label: "Dev Backend" },
-  { id: "qa", label: "QA" },
-];
-
-const PERFIL_LABEL = Object.fromEntries(PERFIS.map((p) => [p.id, p.label]));
-
 export default function UsuariosPerfisPage() {
   const [usuarios, setUsuarios] = useState([]);
+  const [perfisCatalog, setPerfisCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -37,6 +28,22 @@ export default function UsuariosPerfisPage() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const fileRef = useRef(null);
   const debouncedQ = useDebouncedValue(q);
+
+  const perfilLabel = useMemo(
+    () => Object.fromEntries(perfisCatalog.map((p) => [p.id, p.label])),
+    [perfisCatalog]
+  );
+
+  const defaultPerfil = perfisCatalog.find((p) => p.id === "desenvolvedor")?.id || perfisCatalog[0]?.id || "";
+
+  const loadPerfis = useCallback(async () => {
+    const { data } = await apiJson("/perfis");
+    setPerfisCatalog(
+      data
+        .filter((p) => p.ativo)
+        .map((p) => ({ id: p.codigo, label: p.nome }))
+    );
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +59,10 @@ export default function UsuariosPerfisPage() {
       setLoading(false);
     }
   }, [debouncedQ, perfilFilter]);
+
+  useEffect(() => {
+    loadPerfis().catch((e) => setError(e.message));
+  }, [loadPerfis]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -71,7 +82,7 @@ export default function UsuariosPerfisPage() {
   };
 
   const openCreate = () => {
-    setForm({ nome: "", email: "", cargo: "", perfis: ["dev_front"], ativo: 1, senha: "" });
+    setForm({ nome: "", email: "", cargo: "", perfis: defaultPerfil ? [defaultPerfil] : [], ativo: 1, senha: "" });
     setAvatarPreview(null);
     setModal("create");
   };
@@ -142,7 +153,7 @@ export default function UsuariosPerfisPage() {
     load();
   };
 
-  if (loading && !usuarios.length) return <PageLoader />;
+  if ((loading && !usuarios.length) || !perfisCatalog.length) return <PageLoader />;
 
   return (
     <div className="page">
@@ -163,7 +174,7 @@ export default function UsuariosPerfisPage() {
             <Input placeholder="Buscar nome, e-mail ou cargo..." value={q} onChange={(e) => setQ(e.target.value)} />
             <Select value={perfilFilter} onChange={(e) => setPerfilFilter(e.target.value)}>
               <option value="">Todos os perfis</option>
-              {PERFIS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              {perfisCatalog.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
             </Select>
           </div>
         </div>
@@ -196,7 +207,7 @@ export default function UsuariosPerfisPage() {
                     <td>
                       <div className="perfis-badges">
                         {perfisArr.map((p) => (
-                          <span key={p} className="perfil-badge">{PERFIL_LABEL[p] || p}</span>
+                          <span key={p} className="perfil-badge">{perfilLabel[p] || p}</span>
                         ))}
                       </div>
                     </td>
@@ -252,7 +263,7 @@ export default function UsuariosPerfisPage() {
             <MultiSelect
               label="Perfis"
               required
-              options={PERFIS}
+              options={perfisCatalog}
               value={form.perfis || []}
               onChange={(ids) => setForm({ ...form, perfis: ids })}
               getOptionValue={(o) => o.id}

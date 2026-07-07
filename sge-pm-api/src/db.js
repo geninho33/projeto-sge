@@ -61,6 +61,8 @@ export async function initDb() {
     applySchemaV5();
     const { applySchemaV6 } = await import("./services/schemaV6.js");
     applySchemaV6();
+    const { applySchemaV7 } = await import("./services/schemaV7.js");
+    applySchemaV7();
     const { seedSqliteIfEmpty } = await import("./services/seedSqlite.js");
     seedSqliteIfEmpty();
     const { ensureDefaultPasswords } = await import("./services/authService.js");

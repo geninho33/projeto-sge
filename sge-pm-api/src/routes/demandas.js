@@ -4,6 +4,7 @@ import { logHistorico, getHistorico } from "../services/historico.js";
 import { notifyGestor } from "../services/apontamentoService.js";
 import { SITUACOES_TRABALHO } from "../services/schemaV3.js";
 import { requirePerfil } from "../middleware/auth.js";
+import { isManagerUser } from "../services/profileService.js";
 import { enrichDemanda, validateFase } from "../services/demandaFlow.js";
 
 const router = Router();
@@ -163,7 +164,7 @@ router.patch("/:id/andamento", async (req, res, next) => {
     if (!demanda) return res.status(404).json({ error: { code: "NOT_FOUND" } });
 
     const isOwner = demanda.responsavel_id === req.user.id;
-    const isManager = ["gestor", "tech_lead"].includes(req.user.perfil);
+    const isManager = isManagerUser(req.user);
     if (!isOwner && !isManager) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Sem permissão" } });
     }
@@ -216,7 +217,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: { code: "VALIDATION_ERROR", message: "Fase inválida" } });
     }
 
-    const isManager = ["gestor", "tech_lead"].includes(req.user.perfil);
+    const isManager = isManagerUser(req.user);
     const solicitanteId = isManager && b.solicitante_id ? b.solicitante_id : req.user.id;
 
     const codigo = b.codigo || (await nextCodigo());
@@ -254,7 +255,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.post("/legado", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.post("/legado", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.titulo?.trim()) {
@@ -292,7 +293,7 @@ router.patch("/:id/flow", async (req, res, next) => {
     if (!demanda) return res.status(404).json({ error: { code: "NOT_FOUND", message: "Demanda não encontrada" } });
 
     const isOwner = demanda.solicitante_id === req.user.id || demanda.responsavel_id === req.user.id;
-    const isManager = ["gestor", "tech_lead"].includes(req.user.perfil);
+    const isManager = isManagerUser(req.user);
     if (!isOwner && !isManager) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "Sem permissão para editar esta demanda" } });
     }
@@ -337,7 +338,7 @@ router.patch("/:id/flow", async (req, res, next) => {
   }
 });
 
-router.put("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) => {
+router.put("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     const b = req.body || {};
     const fields = [
@@ -364,7 +365,7 @@ router.put("/:id", requirePerfil("gestor", "tech_lead"), async (req, res, next) 
   }
 });
 
-router.delete("/:id", requirePerfil("gestor"), async (req, res, next) => {
+router.delete("/:id", requirePerfil("gestor_proj", "admin"), async (req, res, next) => {
   try {
     await query(`DELETE FROM sge_pm_demanda WHERE id = ?`, [req.params.id]);
     await logHistorico("demanda", req.params.id, req.user.id, "excluida");

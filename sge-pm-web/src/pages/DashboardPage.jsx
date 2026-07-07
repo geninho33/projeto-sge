@@ -6,6 +6,7 @@ import { Card } from "../components/ui/Card";
 import { StatusBadge } from "../components/ui/Badge";
 import { Alert } from "../components/ui/Alert";
 import { PageLoader } from "../components/ui/Spinner";
+import { isAdmin } from "../utils/permissions";
 import Dashboard from "./Dashboard";
 
 const SIT_LABELS = {
@@ -18,7 +19,7 @@ const SIT_LABELS = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const isGestor = ["gestor", "tech_lead"].includes(user?.perfil);
+  const isGestor = isAdmin(user);
   const [gestor, setGestor] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(isGestor);

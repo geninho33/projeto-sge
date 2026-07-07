@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { query, queryOne } from "../db.js";
 import { config } from "../config.js";
 import { logHistorico } from "./historico.js";
+import { enrichUser } from "./profileService.js";
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MINUTES = 15;
@@ -79,6 +80,7 @@ export async function login(email, senha, remember, ip) {
 
   const token = signToken(user, remember);
   const { senha_hash, ...safe } = user;
+  await enrichUser(safe);
   return { token, user: safe, expiresIn: remember ? "30d" : config.jwtExpiresIn };
 }
 

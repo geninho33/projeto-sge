@@ -31,8 +31,8 @@ export function seedSqliteIfEmpty() {
   for (const sk of SKILLS) insSkill.run(...sk);
 
   const users = [
-    ["Gestor", "gestor@sge.local", "Gestor de Projeto", "gestor"],
-    ["Eugênio José da Costa", "geninho33@gmail.com", "Desenvolvedor", "dev_front"],
+    ["Gestor", "gestor@sge.local", "Gestor de Projeto", "gestor_proj"],
+    ["Eugênio José da Costa", "geninho33@gmail.com", "Desenvolvedor", "desenvolvedor"],
   ];
   const insUser = s.prepare("INSERT INTO sge_pm_usuario (nome, email, cargo, perfil) VALUES (?, ?, ?, ?)");
   for (const u of users) insUser.run(...u);
