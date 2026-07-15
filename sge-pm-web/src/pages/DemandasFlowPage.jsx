@@ -13,6 +13,8 @@ import { Avatar, AvatarGroup } from "../components/ui/Avatar";
 import { Alert } from "../components/ui/Alert";
 import { DemandaEditModal } from "../components/demanda/DemandaEditModal";
 import { DemandaDetailModal } from "../components/demanda/DemandaDetailModal";
+import { GerarDemandaBacklogModal } from "../components/demanda/GerarDemandaBacklogModal";
+import { BacklogVisaoModal } from "../components/backlog/BacklogVisaoModal";
 import { Can } from "../components/permission/Can";
 import { P } from "../hooks/usePermission";
 import { FASES_LABEL } from "../constants/cores";
@@ -33,6 +35,8 @@ export default function DemandasFlowPage() {
   const [editNew, setEditNew] = useState(null);
   const [editId, setEditId] = useState(null);
   const [detailId, setDetailId] = useState(null);
+  const [backlogCodigo, setBacklogCodigo] = useState(null);
+  const [gerarBacklogOpen, setGerarBacklogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [links, setLinks] = useState([{ titulo: "", url: "" }]);
   const [viewMode, setViewMode] = useState("kanban");
@@ -122,6 +126,7 @@ export default function DemandasFlowPage() {
             <button type="button" className={`view-toggle__btn${viewMode === "kanban" ? " active" : ""}`} onClick={() => setViewMode("kanban")} title="Visualização Kanban">▦</button>
           </div>
           <Can menuKey="demandas" level={P.CREATE}>
+            <Button variant="ghost" onClick={() => setGerarBacklogOpen(true)}>Gerar Demanda pelo Backlog</Button>
             <Button onClick={openNew}>Nova Demanda</Button>
           </Can>
         </div>
@@ -188,6 +193,24 @@ export default function DemandasFlowPage() {
                         <PriorityBadge value={d.prioridade} />
                       </div>
                       <h4 className="kcard__title">{d.titulo}</h4>
+                      {d.backlog_codigo && (
+                        <button
+                          type="button"
+                          className="kanban-card__backlog"
+                          title={`Abrir backlog ${d.backlog_codigo}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBacklogCodigo(d.backlog_codigo);
+                          }}
+                        >
+                          <span className="kanban-card__backlog-icon" aria-hidden>📋</span>
+                          <span className="kanban-card__backlog-text">
+                            <strong>{d.backlog_codigo}</strong>
+                            <span>{d.backlog_titulo}</span>
+                          </span>
+                          {d.backlog_prioridade && <PriorityBadge value={d.backlog_prioridade} />}
+                        </button>
+                      )}
                       <div className="kcard__indicators">
                         <span className="kcard__indicator" title="Atividades">📋 {d.total_atividades || 0}</span>
                         <span className="kcard__indicator" title="Tarefas">☰ {d.total_tarefas || 0}</span>
@@ -230,6 +253,25 @@ export default function DemandasFlowPage() {
         open={!!detailId}
         demandaId={detailId}
         onClose={() => { setDetailId(null); load(); }}
+      />
+
+      <GerarDemandaBacklogModal
+        open={gerarBacklogOpen}
+        onClose={() => setGerarBacklogOpen(false)}
+        usuarios={usuarios}
+        onSuccess={(data) => {
+          const codigo = data?.demanda?.codigo || "";
+          const backlog = data?.backlog_codigo || "";
+          setSuccess(`Demanda ${codigo} gerada a partir do backlog ${backlog}. Atividade e tarefa criadas para o executor.`);
+          load();
+        }}
+        onError={(msg) => setError(msg)}
+      />
+
+      <BacklogVisaoModal
+        open={!!backlogCodigo}
+        codigo={backlogCodigo}
+        onClose={() => setBacklogCodigo(null)}
       />
 
       <Modal open={!!editNew} onClose={() => setEditNew(null)} title="Nova Demanda" size="full"

@@ -16,9 +16,12 @@ router.get("/", async (req, res, next) => {
     for (const fase of MEU_KANBAN_FASES) columns[fase] = [];
 
     const demandas = await query(
-      `SELECT DISTINCT d.*, p.nome AS projeto_nome, p.cor AS projeto_cor, p.codigo AS projeto_codigo
+      `SELECT DISTINCT d.*, p.nome AS projeto_nome, p.cor AS projeto_cor, p.codigo AS projeto_codigo,
+              b.id AS backlog_id, b.codigo AS backlog_codigo, b.titulo AS backlog_titulo,
+              b.prioridade AS backlog_prioridade
        FROM sge_pm_demanda d
        LEFT JOIN sge_pm_projeto p ON p.id = d.projeto_id
+       LEFT JOIN sge_pm_backlog_item b ON b.id = d.backlog_item_id
        WHERE d.deleted_at IS NULL
          AND d.fase IN (${MEU_KANBAN_FASES.map(() => "?").join(",")})
          AND EXISTS (
@@ -34,6 +37,27 @@ router.get("/", async (req, res, next) => {
     for (const d of demandas) {
       const fase = d.fase || "desenvolvimento";
       d.atrasada = d.data_prevista_termino && d.data_prevista_termino < hoje && fase !== "aprovacao" && fase !== "cancelada";
+
+      // Fallback: backlog vinculado via atividade, se a demanda não tiver backlog_item_id
+      if (!d.backlog_codigo) {
+        const viaAtividade = await queryOne(
+          `SELECT b.id AS backlog_id, b.codigo AS backlog_codigo, b.titulo AS backlog_titulo,
+                  b.prioridade AS backlog_prioridade
+           FROM sge_pm_atividade_backlog ab
+           JOIN sge_pm_atividade a ON a.id = ab.atividade_id
+           JOIN sge_pm_backlog_item b ON b.id = ab.backlog_item_id
+           WHERE a.demanda_id = ?
+           ORDER BY ab.atividade_id ASC
+           LIMIT 1`,
+          [d.id]
+        );
+        if (viaAtividade) {
+          d.backlog_id = viaAtividade.backlog_id;
+          d.backlog_codigo = viaAtividade.backlog_codigo;
+          d.backlog_titulo = viaAtividade.backlog_titulo;
+          d.backlog_prioridade = viaAtividade.backlog_prioridade;
+        }
+      }
 
       const horasRow = await queryOne(
         `SELECT COALESCE(SUM(ap.duracao_minutos), 0) AS t

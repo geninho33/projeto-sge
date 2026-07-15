@@ -8,6 +8,7 @@ import { PriorityBadge, StatusBadge } from "../components/ui/Badge";
 import { PageLoader } from "../components/ui/Spinner";
 import { Alert } from "../components/ui/Alert";
 import { DemandaDetailModal } from "../components/demanda/DemandaDetailModal";
+import { BacklogVisaoModal } from "../components/backlog/BacklogVisaoModal";
 import { KanbanColumnPicker } from "../components/kanban/KanbanColumnPicker";
 import { useKanbanColumns } from "../hooks/useKanbanColumns";
 import { FASES_LABEL } from "../constants/cores";
@@ -21,6 +22,7 @@ export default function MeuKanbanPage() {
   const [error, setError] = useState(null);
   const [moving, setMoving] = useState(false);
   const [detailId, setDetailId] = useState(null);
+  const [backlogCodigo, setBacklogCodigo] = useState(null);
   const [viewMode, setViewMode] = useState("kanban");
 
   const { visibleColumns, columnOrder, toggleColumn } = useKanbanColumns(user?.id, allColumnOrder, "atividades");
@@ -131,6 +133,24 @@ export default function MeuKanbanPage() {
                                     <PriorityBadge value={d.prioridade} />
                                   </div>
                                   <p className="kanban-card__title">{d.titulo}</p>
+                                  {d.backlog_codigo && (
+                                    <button
+                                      type="button"
+                                      className="kanban-card__backlog"
+                                      title={`Abrir backlog ${d.backlog_codigo}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBacklogCodigo(d.backlog_codigo);
+                                      }}
+                                    >
+                                      <span className="kanban-card__backlog-icon" aria-hidden>📋</span>
+                                      <span className="kanban-card__backlog-text">
+                                        <strong>{d.backlog_codigo}</strong>
+                                        <span>{d.backlog_titulo}</span>
+                                      </span>
+                                      {d.backlog_prioridade && <PriorityBadge value={d.backlog_prioridade} />}
+                                    </button>
+                                  )}
                                   <small className="text-muted">{d.projeto_nome}</small>
                                   <div className="kanban-card__meta">
                                     {d.minhas_tarefas > 0 && <span>☰ {d.minhas_tarefas}</span>}
@@ -182,7 +202,19 @@ export default function MeuKanbanPage() {
                   <tr key={d.id}>
                     <td className="table-actions"><Button size="sm" variant="ghost" onClick={() => setDetailId(d.id)}>Detalhes</Button></td>
                     <td><strong>{d.codigo}</strong></td>
-                    <td>{d.titulo}</td>
+                    <td>
+                      <div>{d.titulo}</div>
+                      {d.backlog_codigo && (
+                        <button
+                          type="button"
+                          className="kanban-card__backlog kanban-card__backlog--inline"
+                          onClick={() => setBacklogCodigo(d.backlog_codigo)}
+                        >
+                          <span aria-hidden>📋</span> {d.backlog_codigo} — {d.backlog_titulo}
+                          {d.backlog_prioridade && <PriorityBadge value={d.backlog_prioridade} />}
+                        </button>
+                      )}
+                    </td>
                     <td>{d.projeto_nome || "—"}</td>
                     <td><StatusBadge value={d.fase_col} label={FASES_LABEL[d.fase_col] || d.fase_col} /></td>
                     <td>{d.minhas_tarefas || 0}</td>
@@ -199,6 +231,12 @@ export default function MeuKanbanPage() {
         open={!!detailId}
         demandaId={detailId}
         onClose={() => { setDetailId(null); load(); }}
+      />
+
+      <BacklogVisaoModal
+        open={!!backlogCodigo}
+        codigo={backlogCodigo}
+        onClose={() => setBacklogCodigo(null)}
       />
     </div>
   );

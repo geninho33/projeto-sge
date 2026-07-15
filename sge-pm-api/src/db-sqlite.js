@@ -31,6 +31,11 @@ export function sqliteQuery(sql, params = []) {
   return info;
 }
 
+/** Executa fn de forma síncrona dentro de uma transação SQLite (rollback automático em erro). */
+export function sqliteTransaction(fn) {
+  return getSqlite().transaction(fn)();
+}
+
 export function initSqliteSchema() {
   const s = getSqlite();
   s.exec(`

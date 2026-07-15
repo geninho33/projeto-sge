@@ -7,6 +7,11 @@ import { requireMenuPermission } from "../middleware/auth.js";
 import { isManagerUser } from "../services/profileService.js";
 import { P } from "../services/menuPermissions.js";
 import { enrichDemanda, validateFase } from "../services/demandaFlow.js";
+import {
+  gerarDemandaFromBacklog,
+  listBacklogDisponiveis,
+  mapPrioridadeBacklog,
+} from "../services/gerarDemandaFromBacklog.js";
 
 const router = Router();
 
@@ -17,7 +22,7 @@ const HORAS_SUBQUERY = `COALESCE((
 const SELECT = `
   SELECT d.*,
          ${HORAS_SUBQUERY} AS horas_apontadas,
-         b.codigo AS backlog_codigo, b.titulo AS backlog_titulo,
+         b.codigo AS backlog_codigo, b.titulo AS backlog_titulo, b.prioridade AS backlog_prioridade,
          u.nome AS responsavel_nome, r.nome AS revisor_nome, h.nome AS homologador_nome,
          s.nome AS sprint_nome, p.nome AS projeto_nome,
          sol.nome AS solicitante_nome
@@ -112,6 +117,45 @@ router.get("/", requireMenuPermission("demandas", P.VIEW), async (req, res, next
 
     res.json({ data: rows });
   } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/backlog-disponiveis", requireMenuPermission("demandas", P.VIEW), async (req, res, next) => {
+  try {
+    const rows = await listBacklogDisponiveis({
+      q: req.query.q,
+      limit: req.query.limit,
+    });
+    res.json({ data: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/from-backlog", requireMenuPermission("demandas", P.CREATE), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const result = await gerarDemandaFromBacklog(
+      {
+        ...b,
+        prioridade: b.prioridade || mapPrioridadeBacklog(b.backlog_prioridade),
+      },
+      req.user
+    );
+
+    await notifyGestor(
+      result.demanda.id,
+      "Demanda gerada do backlog",
+      `${result.demanda.codigo} criada a partir de ${result.backlog_codigo} por ${req.user.nome}`
+    );
+
+    res.status(201).json({ data: result });
+  } catch (err) {
+    if (err.code === "VALIDATION_ERROR" || err.code === "ALREADY_EXISTS" || err.code === "NOT_FOUND") {
+      const status = err.code === "NOT_FOUND" ? 404 : err.code === "ALREADY_EXISTS" ? 409 : 400;
+      return res.status(status).json({ error: { code: err.code, message: err.message } });
+    }
     next(err);
   }
 });

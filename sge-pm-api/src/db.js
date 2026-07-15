@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 import { config } from "./config.js";
-import { getSqlite, sqliteQuery, initSqliteSchema } from "./db-sqlite.js";
+import { getSqlite, sqliteQuery, sqliteTransaction, initSqliteSchema } from "./db-sqlite.js";
 
 let pool;
 
@@ -46,6 +46,34 @@ export async function query(sql, params) {
 export async function queryOne(sql, params) {
   const rows = await query(sql, params);
   return rows[0] ?? null;
+}
+
+/** Transação atômica. Em SQLite a callback deve ser síncrona. */
+export async function withTransaction(fn) {
+  if (useSqlite()) {
+    return sqliteTransaction(fn);
+  }
+  const conn = await getPool().getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await fn({
+      query: async (sql, params) => {
+        const [rows] = await conn.execute(sql, params);
+        return rows;
+      },
+      queryOne: async (sql, params) => {
+        const [rows] = await conn.execute(sql, params);
+        return rows[0] ?? null;
+      },
+    });
+    await conn.commit();
+    return result;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
 
 export async function initDb() {
