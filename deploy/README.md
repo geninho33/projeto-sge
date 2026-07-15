@@ -18,7 +18,7 @@ chmod +x deploy.sh scripts/*.sh
 ./deploy.sh
 ```
 
-A aplicação ficará disponível em `http://localhost` (porta configurável via `WEB_PORT`).
+A aplicação ficará disponível em `http://localhost:8080` (porta configurável via `WEB_PORT`).
 
 ## Serviços
 
@@ -53,7 +53,7 @@ Por padrão a API utiliza **SQLite** em volume persistente (`api_data`), pois o 
 ## Variáveis principais (.env)
 
 - `JWT_SECRET` — obrigatório em produção
-- `WEB_PORT` — porta HTTP exposta (padrão: 80)
+- `WEB_PORT` — porta HTTP exposta (padrão: 8080)
 - `DB_DRIVER` — `sqlite` (padrão) ou `mysql`
 - `MYSQL_*` — credenciais do container `db`
 
