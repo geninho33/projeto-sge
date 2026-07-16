@@ -29,6 +29,26 @@ sudo cp nginx/host-proxy-16flow.conf /etc/nginx/conf.d/16flow.conf
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+## Isolamento de outras stacks
+
+O Compose usa o projeto fixo **`projeto-sge`** (não o nome da pasta `deploy`), rede `projeto-sge_net` e containers `projeto-sge-*`.
+
+- `./deploy.sh start|update` **não** usa `--remove-orphans` (não derruba `sga`, MySQL, Portainer, etc.).
+- `./deploy.sh stop|clean` afeta **somente** os containers do `projeto-sge`.
+
+Se ainda existirem containers antigos `deploy-api-1` / `deploy-web-1`, remova só eles após subir o novo stack:
+
+```bash
+docker rm -f deploy-api-1 deploy-web-1 deploy-db-1 2>/dev/null || true
+```
+
+Para reaproveitar dados SQLite do volume antigo `deploy_api_data`:
+
+```bash
+docker run --rm -v deploy_api_data:/from -v projeto-sge_api_data:/to alpine \
+  sh -c 'cp -a /from/. /to/'
+```
+
 ## Serviços
 
 | Serviço | Descrição |

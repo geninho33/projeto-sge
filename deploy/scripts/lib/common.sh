@@ -41,7 +41,8 @@ ensure_env() {
 }
 
 compose() {
-  docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" "$@"
+  # -p projeto-sge garante isolamento mesmo se o diretório se chamar "deploy"
+  docker compose -p projeto-sge -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" "$@"
 }
 
 wait_healthy() {

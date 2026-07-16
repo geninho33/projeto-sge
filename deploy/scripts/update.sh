@@ -7,9 +7,10 @@ source "${SCRIPT_DIR}/lib/common.sh"
 check_prerequisites
 ensure_env
 
-log "Atualizando aplicação (rebuild + restart)..."
+log "Atualizando aplicação projeto-sge (rebuild + restart)..."
 "${SCRIPT_DIR}/build.sh"
-compose up -d --remove-orphans
+# Sem --remove-orphans: não remove containers de outros projetos
+compose up -d
 
 wait_healthy db 90
 wait_healthy api 90

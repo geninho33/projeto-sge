@@ -7,8 +7,9 @@ source "${SCRIPT_DIR}/lib/common.sh"
 check_prerequisites
 ensure_env
 
-log "Iniciando containers..."
-compose up -d --remove-orphans
+log "Iniciando containers do projeto-sge (não afeta outras stacks)..."
+# Sem --remove-orphans: evita derrubar containers de outros projetos (ex.: sga, mysql-*)
+compose up -d
 
 wait_healthy db 90
 wait_healthy api 90

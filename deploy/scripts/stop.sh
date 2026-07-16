@@ -7,7 +7,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
 check_prerequisites
 ensure_env
 
-log "Parando containers..."
+log "Parando containers do projeto-sge (outras stacks não são afetadas)..."
 compose down
 
-log "Containers parados."
+log "Containers projeto-sge parados."

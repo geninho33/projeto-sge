@@ -1,6 +1,11 @@
+# Nome fixo do projeto Compose — NÃO usa o nome da pasta "deploy"
+# (evita colidir com outras stacks e --remove-orphans apagar containers alheios)
+name: projeto-sge
+
 services:
   db:
     image: mariadb:11.4
+    container_name: projeto-sge-db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no arquivo .env}
@@ -9,6 +14,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD no arquivo .env}
     volumes:
       - mariadb_data:/var/lib/mysql
+    networks:
+      - projeto-sge
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -21,6 +28,7 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile.api
     image: projeto-sge-api:latest
+    container_name: projeto-sge-api
     restart: unless-stopped
     environment:
       PORT: 3010
@@ -37,6 +45,8 @@ services:
     volumes:
       - api_data:/repo/sge-pm-api/data
       - api_avatars:/repo/sge-pm-api/public/avatars
+    networks:
+      - projeto-sge
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3010/health"]
       interval: 15s
@@ -54,16 +64,28 @@ services:
       args:
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/16flow}
     image: projeto-sge-web:latest
+    container_name: projeto-sge-web
     restart: unless-stopped
     # Bind só em localhost:9080 — o nginx do host faz proxy de /16flow
     # (não usa 80 nem 8080 do host, que já estão ocupadas)
     ports:
       - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}:80"
+    networks:
+      - projeto-sge
     depends_on:
       api:
         condition: service_healthy
 
+networks:
+  projeto-sge:
+    name: projeto-sge_net
+    driver: bridge
+
 volumes:
+  # Nomes explícitos — isolados de outras stacks (ex.: sga, mysql-*)
   mariadb_data:
+    name: projeto-sge_mariadb_data
   api_data:
+    name: projeto-sge_api_data
   api_avatars:
+    name: projeto-sge_api_avatars
