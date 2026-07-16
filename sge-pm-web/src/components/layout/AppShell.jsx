@@ -46,7 +46,7 @@ export default function AppShell() {
     <div className={`app-shell${sidebarOpen ? " app-shell--sidebar-open" : ""}`}>
       <aside className="app-sidebar">
         <div className="app-sidebar__brand">
-          <img src="/logo-16flow.png" alt="16Flow" className="app-sidebar__logo-img" />
+          <img src={`${import.meta.env.BASE_URL}logo-16flow.png`} alt="16Flow" className="app-sidebar__logo-img" />
           <div>
             <strong className="brand-16">16<span className="brand-flow">flow</span></strong>
             <small>Gestão de Demandas</small>

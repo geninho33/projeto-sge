@@ -14,6 +14,8 @@ wait_healthy db 90
 wait_healthy api 90
 wait_healthy web 60
 
-WEB_PORT="$(grep -E '^WEB_PORT=' "${ENV_FILE}" | cut -d= -f2- || echo 8080)"
-log "Aplicação disponível em http://localhost:${WEB_PORT:-8080}"
-log "Health API: http://localhost:${WEB_PORT:-8080}/health"
+WEB_PORT="$(grep -E '^WEB_PORT=' "${ENV_FILE}" | cut -d= -f2- || echo 9080)"
+WEB_BIND="$(grep -E '^WEB_BIND=' "${ENV_FILE}" | cut -d= -f2- || echo 127.0.0.1)"
+log "Aplicação (caminho): http://localhost/16flow/  (via nginx do host)"
+log "Container web (loopback): http://${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}/16flow/"
+log "Health: http://${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}/16flow/health"

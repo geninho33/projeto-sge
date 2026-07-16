@@ -63,7 +63,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-page__brand">
         <div className="login-page__brand-inner">
-          <img src="/logo-16flow.png" alt="16Flow" className="login-page__logo-img" />
+          <img src={`${import.meta.env.BASE_URL}logo-16flow.png`} alt="16Flow" className="login-page__logo-img" />
           <h1><span className="brand-16">16</span><span className="brand-flow">flow</span></h1>
           <p>Gestão de demandas e apontamento de horas com rastreabilidade completa.</p>
           <ul className="login-page__features">
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
       <div className="login-page__form-panel">
         <form className="login-card" onSubmit={handleSubmit}>
-          <img src="/logo-16flow.png" alt="" className="login-card__logo" aria-hidden />
+          <img src={`${import.meta.env.BASE_URL}logo-16flow.png`} alt="" className="login-card__logo" aria-hidden />
           <h2>Bem-vindo ao <span className="brand-16">16</span><span className="brand-flow">flow</span></h2>
           <p className="login-card__subtitle">Use seu e-mail corporativo para acessar</p>
 

@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { apiJson } from "../../api/client";
+import { withBase } from "../../utils/basePath";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { StatusBadge, PriorityBadge } from "../ui/Badge";
 import { PageLoader } from "../ui/Spinner";
 import { Alert } from "../ui/Alert";
+
+function assetUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return withBase(url);
+}
 
 export function BacklogVisaoModal({ open, codigo, onClose }) {
   const [data, setData] = useState(null);
@@ -37,6 +44,7 @@ export function BacklogVisaoModal({ open, codigo, onClose }) {
   if (!open) return null;
 
   const b = data?.backlog;
+  const screenshotSrc = assetUrl(data?.screenshot?.url);
 
   return (
     <>
@@ -80,10 +88,10 @@ export function BacklogVisaoModal({ open, codigo, onClose }) {
 
             <section className="backlog-visao__section card-section">
               <h4 className="backlog-visao__section-title">📷 Screenshot da aplicação</h4>
-              {data.screenshot?.url ? (
+              {screenshotSrc ? (
                 <div className="backlog-visao__screenshot-wrap">
                   <img
-                    src={data.screenshot.url}
+                    src={screenshotSrc}
                     alt={`Screenshot ${b.codigo}`}
                     className="backlog-visao__screenshot"
                     onClick={() => setZoomImg(true)}
@@ -110,9 +118,9 @@ export function BacklogVisaoModal({ open, codigo, onClose }) {
         )}
       </Modal>
 
-      {zoomImg && data?.screenshot?.url && (
+      {zoomImg && screenshotSrc && (
         <div className="backlog-visao__lightbox" onClick={() => setZoomImg(false)} role="presentation">
-          <img src={data.screenshot.url} alt={`Screenshot ampliada ${b?.codigo}`} onClick={(e) => e.stopPropagation()} />
+          <img src={screenshotSrc} alt={`Screenshot ampliada ${b?.codigo}`} onClick={(e) => e.stopPropagation()} />
           <button type="button" className="backlog-visao__lightbox-close" onClick={() => setZoomImg(false)}>×</button>
         </div>
       )}

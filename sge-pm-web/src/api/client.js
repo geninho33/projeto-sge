@@ -1,3 +1,5 @@
+import { withBase } from "../utils/basePath";
+
 const TOKEN_KEY = "sge_pm_token";
 
 export function getToken() {
@@ -22,7 +24,7 @@ export async function apiJson(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...options.headers };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api${path}`, { ...options, headers });
+  const res = await fetch(withBase(`/api${path}`), { ...options, headers });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(body?.error?.message || res.statusText || `Erro HTTP ${res.status}`);
@@ -39,7 +41,7 @@ export async function apiUpload(path, formData) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api${path}`, { method: "POST", headers, body: formData });
+  const res = await fetch(withBase(`/api${path}`), { method: "POST", headers, body: formData });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(body?.error?.message || res.statusText || `Erro HTTP ${res.status}`);

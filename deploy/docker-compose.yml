@@ -51,10 +51,14 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.web
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/16flow}
     image: projeto-sge-web:latest
     restart: unless-stopped
+    # Bind só em localhost:9080 — o nginx do host faz proxy de /16flow
+    # (não usa 80 nem 8080 do host, que já estão ocupadas)
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}:80"
     depends_on:
       api:
         condition: service_healthy

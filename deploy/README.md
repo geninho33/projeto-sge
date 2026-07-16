@@ -7,6 +7,7 @@ Infraestrutura Docker para implantação em produção do módulo PM (`sge-pm-ap
 - Docker 24+
 - Docker Compose v2
 - Bash (Linux, macOS, Git Bash ou WSL no Windows)
+- Nginx no host (recomendado) para publicar o caminho `/16flow`
 
 ## Início rápido
 
@@ -18,13 +19,21 @@ chmod +x deploy.sh scripts/*.sh
 ./deploy.sh
 ```
 
-A aplicação ficará disponível em `http://localhost:8080` (porta configurável via `WEB_PORT`).
+A aplicação fica em **`http://SEU-SERVIDOR/16flow/`** (não usa as portas 80/8080 do host).
+
+O container `web` escuta só em `127.0.0.1:9080`. Configure o nginx do host:
+
+```bash
+# Inclua no server {} que já escuta na porta 80, ou copie para conf.d:
+sudo cp nginx/host-proxy-16flow.conf /etc/nginx/conf.d/16flow.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
 
 ## Serviços
 
 | Serviço | Descrição |
 |---------|-----------|
-| `web`   | Nginx — frontend React e proxy `/api`, `/avatars`, `/crawl` |
+| `web`   | Nginx — frontend React em `/16flow` e proxy `/16flow/api`, `/16flow/avatars`, `/16flow/crawl` |
 | `api`   | API Node.js (16flow-api) |
 | `db`    | MariaDB 11 — persistência relacional (pronto para `DB_DRIVER=mysql`) |
 
@@ -53,7 +62,9 @@ Por padrão a API utiliza **SQLite** em volume persistente (`api_data`), pois o 
 ## Variáveis principais (.env)
 
 - `JWT_SECRET` — obrigatório em produção
-- `WEB_PORT` — porta HTTP exposta (padrão: 8080)
+- `VITE_BASE_PATH` — caminho público (padrão: `/16flow`)
+- `WEB_BIND` — bind do host (padrão: `127.0.0.1`)
+- `WEB_PORT` — porta loopback (padrão: `9080`, evita conflito com 80/8080)
 - `DB_DRIVER` — `sqlite` (padrão) ou `mysql`
 - `MYSQL_*` — credenciais do container `db`
 

@@ -1,3 +1,5 @@
+import { withBase } from "../../utils/basePath";
+
 function getInitials(name) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -18,8 +20,7 @@ function hashColor(name) {
 }
 
 export function Avatar({ name, src, size = 32, className = "" }) {
-  const apiBase = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3010";
-  const fullSrc = src && !src.startsWith("http") ? `${apiBase}${src}` : src;
+  const fullSrc = src && !src.startsWith("http") ? withBase(src) : src;
 
   if (fullSrc) {
     return (
