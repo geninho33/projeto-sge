@@ -33,6 +33,33 @@ sudo bash scripts/install-host-proxy.sh
 Acesso no navegador: **`http://IP-DO-SERVIDOR/16flow/`**  
 (Não use `http://IP:9080` de outra máquina — a porta 9080 escuta só em `127.0.0.1`.)
 
+## HTTPS
+
+O TLS é feito no **nginx do host** (o container `web` continua em `127.0.0.1:9080`). Use o script `scripts/enable-https.sh`, que gera `/etc/nginx/conf.d/16flow-https.conf` sem mexer nos outros sites.
+
+**Domínio público (certificado gratuito Let's Encrypt):**
+
+```bash
+# o domínio precisa apontar (DNS A) para o IP do servidor e a porta 80 estar acessível
+sudo apt-get install -y certbot
+sudo bash scripts/enable-https.sh --domain 16flow.seudominio.com --email voce@dominio.com
+# acesso: https://16flow.seudominio.com/16flow/  (com redirect automático de HTTP)
+```
+
+**IP / rede interna (certificado self-signed):**
+
+```bash
+sudo bash scripts/enable-https.sh --self-signed            # detecta o IP do host
+# ou informando o IP:
+sudo bash scripts/enable-https.sh --self-signed --host 191.x.x.x
+# acesso: https://IP-DO-SERVIDOR/16flow/  (navegador exibirá aviso — normal para self-signed)
+```
+
+Notas:
+- O frontend usa caminhos relativos ao `/16flow/`, então não há conteúdo misto: as chamadas de API passam pelo mesmo HTTPS.
+- No modo self-signed o script **não** cria um `server :80`, para não interferir em outros apps do host (o `/16flow` em HTTP continua ativo via `install-host-proxy.sh`).
+- Renovação Let's Encrypt: o `certbot` instala o timer automático; após renovar, rode `systemctl reload nginx`.
+
 ## Isolamento de outras stacks
 
 O Compose usa o projeto fixo **`projeto-sge`** (não o nome da pasta `deploy`), rede `projeto-sge_net` e containers `projeto-sge-*`.

@@ -1,0 +1,63 @@
+# HTTPS do 16Flow no nginx do HOST (server dedicado por server_name).
+#
+# Este arquivo é um TEMPLATE. NÃO edite/copie manualmente:
+#   use  sudo bash deploy/scripts/enable-https.sh ...
+# Ele substitui __SERVER_NAME__, __SSL_CERT__ e __SSL_KEY__ e grava o
+# resultado em /etc/nginx/conf.d/16flow-https.conf.
+#
+# O container web escuta apenas em 127.0.0.1:9080 (WEB_BIND/WEB_PORT no .env).
+
+# >>> BEGIN_HTTP_REDIRECT (usado só no modo --domain; omitido no self-signed)
+# ---- HTTP :80 -> redireciona para HTTPS (mantém ACME challenge acessível) ----
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __SERVER_NAME__;
+
+    # Desafio do Let's Encrypt (necessário para emitir/renovar certificado)
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+# <<< END_HTTP_REDIRECT
+
+# ---- HTTPS :443 -> proxy para o container web em 127.0.0.1:9080 ----
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name __SERVER_NAME__;
+
+    ssl_certificate     __SSL_CERT__;
+    ssl_certificate_key __SSL_KEY__;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SGE16FLOW_SSL:10m;
+    ssl_session_timeout 1d;
+
+    # HSTS (1 ano). Remova se ainda estiver testando com self-signed.
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    client_max_body_size 20m;
+
+    location = /16flow {
+        return 301 /16flow/;
+    }
+
+    location /16flow/ {
+        proxy_pass http://127.0.0.1:9080/16flow/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+}
