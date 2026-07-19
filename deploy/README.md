@@ -24,10 +24,14 @@ A aplicação fica em **`http://SEU-SERVIDOR/16flow/`** (não usa as portas 80/8
 O container `web` escuta só em `127.0.0.1:9080`. Configure o nginx do host:
 
 ```bash
-# Inclua no server {} que já escuta na porta 80, ou copie para conf.d:
-sudo cp nginx/host-proxy-16flow.conf /etc/nginx/conf.d/16flow.conf
-sudo nginx -t && sudo systemctl reload nginx
+# Instala o include /16flow DENTRO do server :80 do host (não use conf.d sozinho)
+sudo bash scripts/install-host-proxy.sh
+# Diagnóstico:
+./deploy.sh diagnose
 ```
+
+Acesso no navegador: **`http://IP-DO-SERVIDOR/16flow/`**  
+(Não use `http://IP:9080` de outra máquina — a porta 9080 escuta só em `127.0.0.1`.)
 
 ## Isolamento de outras stacks
 
