@@ -43,4 +43,4 @@ npm run dev -w sge-web
 
 ## Backlog
 
-115 telas em `crawl/crawl-report.json`, importadas via `npm run import:backlog`.
+115 telas em `crawl/crawl-report.json`, importadas via `npm run import:backlog` (API autenticada; padrão `gestor@sge.local` / `Sge@2026`). Em Docker: `./deploy.sh import-backlog`.

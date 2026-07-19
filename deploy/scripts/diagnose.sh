@@ -94,7 +94,7 @@ if [[ "${DB_DRIVER_VAL:-sqlite}" == "sqlite" ]]; then
     BACKLOG="$(docker exec projeto-sge-api sh -c "node -e \"const Database=require('better-sqlite3'); const d=new Database('/repo/sge-pm-api/data/sge_pm.sqlite'); try { console.log(d.prepare('SELECT COUNT(*) AS c FROM sge_pm_backlog_item').get().c); } catch(e){ console.log('ERR'); }\"" 2>/dev/null || echo "ERR")"
     info "Itens de backlog: $BACKLOG"
     if [[ "$BACKLOG" == "0" ]]; then
-      mark_fail "Backlog vazio — falta POST /api/admin/import-backlog"
+      mark_fail "Backlog vazio — execute: ./deploy.sh import-backlog"
     fi
   else
     mark_fail "SQLite ausente em /repo/sge-pm-api/data/sge_pm.sqlite"

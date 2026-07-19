@@ -20,3 +20,4 @@ WEB_BIND="$(grep -E '^WEB_BIND=' "${ENV_FILE}" | cut -d= -f2- || echo 127.0.0.1)
 log "Aplicação (caminho): http://localhost/16flow/  (via nginx do host)"
 log "Container web (loopback): http://${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}/16flow/"
 log "Health: http://${WEB_BIND:-127.0.0.1}:${WEB_PORT:-9080}/16flow/health"
+log "Kanban vazio? Importe o backlog: ./deploy.sh import-backlog"

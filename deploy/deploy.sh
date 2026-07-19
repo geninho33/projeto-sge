@@ -21,9 +21,10 @@ Comandos:
   backup    Backup dos volumes
   restore   Restaura backup (./deploy.sh restore <pasta>)
   clean     Remove containers (--images para remover imagens)
-  package   Gera pacote .tar.gz de distribuição
-  diagnose  Diagnóstico completo (rede, logs, HTTP, nginx host)
-  help      Exibe esta ajuda
+  package        Gera pacote .tar.gz de distribuição
+  diagnose       Diagnóstico completo (rede, logs, HTTP, nginx host)
+  import-backlog Importa crawl no Kanban de Progressão (--force para reimportar)
+  help           Exibe esta ajuda
 EOF
 }
 
@@ -47,6 +48,7 @@ case "${cmd}" in
   clean)   bash "${SCRIPTS}/clean.sh" "${2:-}" ;;
   package) bash "${SCRIPTS}/package.sh" ;;
   diagnose) bash "${SCRIPTS}/diagnose.sh" ;;
+  import-backlog) bash "${SCRIPTS}/import-backlog.sh" "${@:2}" ;;
   help|-h|--help) usage ;;
   *)
     err "Comando desconhecido: ${cmd}"

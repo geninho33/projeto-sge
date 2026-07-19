@@ -1,24 +1,49 @@
 /**
- * Importa backlog para SQLite via API admin ou diretamente.
- * Uso: node scripts/import-backlog.js
+ * Importa backlog via API admin (autenticada).
+ * Uso:
+ *   npm run import:backlog
+ *   ADMIN_EMAIL=... ADMIN_PASSWORD=... API_URL=http://localhost:3010/api npm run import:backlog
+ *   FORCE=false npm run import:backlog
  */
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { resolveSkillCodes, storyPoints, branchSlug } from "./skill-utils.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-async function importViaApi() {
-  const res = await fetch("http://localhost:3010/api/admin/import-backlog", {
+const API_URL = (process.env.API_URL || "http://localhost:3010/api").replace(/\/$/, "");
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "gestor@sge.local";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Sge@2026";
+const FORCE = String(process.env.FORCE ?? "true").toLowerCase() !== "false";
+
+async function login() {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ force: true }),
+    body: JSON.stringify({ email: ADMIN_EMAIL, senha: ADMIN_PASSWORD }),
   });
-  const body = await res.json();
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body?.error?.message || `Login falhou (${res.status})`);
+  }
+  const token = body?.data?.token;
+  if (!token) throw new Error("Resposta de login sem token");
+  return token;
+}
+
+async function importViaApi(token) {
+  const res = await fetch(`${API_URL}/admin/import-backlog`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ force: FORCE }),
+  });
+  const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body?.error?.message || res.statusText);
-  console.log(`Importados ${body.data.imported} itens via API.`);
+  console.log(`Importados ${body.data.imported} de ${body.data.total} itens via API.`);
 }
 
 async function main() {
@@ -31,7 +56,8 @@ async function main() {
   }
 
   try {
-    await importViaApi();
+    const token = await login();
+    await importViaApi(token);
   } catch (err) {
     console.error("Import via API falhou (API rodando?):", err.message);
     console.log("Inicie sge-pm-api e execute novamente: npm run import:backlog");

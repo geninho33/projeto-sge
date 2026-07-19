@@ -33,6 +33,23 @@ sudo bash scripts/install-host-proxy.sh
 Acesso no navegador: **`http://IP-DO-SERVIDOR/16flow/`**  
 (Não use `http://IP:9080` de outra máquina — a porta 9080 escuta só em `127.0.0.1`.)
 
+### Importar backlog (Kanban de Progressão)
+
+O seed inicial **não** popula o backlog. Sem este passo, o Kanban de Progressão fica vazio:
+
+```bash
+./deploy.sh import-backlog
+# reimportar do zero (apaga itens atuais):
+./deploy.sh import-backlog --force
+```
+
+Credenciais usadas no login da API (sobrescreva no `.env` se necessário):
+
+- `ADMIN_EMAIL` (padrão: `gestor@sge.local`)
+- `ADMIN_PASSWORD` (padrão: `Sge@2026`)
+
+Depois recarregue **`/16flow/kanban`** — devem aparecer ~115 cards.
+
 ## HTTPS
 
 O TLS é feito no **nginx do host** (o container `web` continua em `127.0.0.1:9080`). Use o script `scripts/enable-https.sh`, que gera `/etc/nginx/conf.d/16flow-https.conf` sem mexer nos outros sites.
@@ -103,6 +120,8 @@ Por padrão a API utiliza **SQLite** em volume persistente (`api_data`), pois o 
 | `./deploy.sh restore <pasta>` | Restaurar backup |
 | `./deploy.sh clean [--images]` | Limpar containers/imagens |
 | `./deploy.sh package` | Gerar pacote `.tar.gz` |
+| `./deploy.sh diagnose` | Diagnóstico (rede, logs, HTTP, backlog) |
+| `./deploy.sh import-backlog` | Importar crawl no Kanban (`--force` para reimportar) |
 
 ## Volumes persistentes
 
